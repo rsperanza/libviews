@@ -1,0 +1,1 @@
+include (../Play.pro)
