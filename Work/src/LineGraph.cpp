@@ -1,0 +1,264 @@
+/*
+ * Copyright (c) 2011-2012 Research In Motion Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include <math.h>
+
+#include "LineGraph.hpp"
+
+#include <QDebug>
+
+using namespace bb::cascades;
+using namespace views::graphics;
+
+
+LineGraph::LineGraph(ViewDisplay display) : View(display)
+{
+	qDebug()  << "LineGraph::LineGraph ";
+
+	_graphics2D = new Graphics2D(display);
+
+	_defaultStroke = _graphics2D->createStroke(2.0);
+	_thinStroke = _graphics2D->createStroke(1.0);
+	_evenDashes = new float[2] { 20.0, 10.0 };
+	_evenDashesStroke = _graphics2D->createStroke(10.0, CAP_NONE, JOIN_NONE, 0.0, _evenDashes, 2, 0.0);
+
+	_slatePro = NULL;
+	_slateProSub = NULL;
+	_slateProLight = NULL;
+
+	// register graphics with base class
+	registerGraphics(_graphics2D);
+
+}
+
+LineGraph::~LineGraph() {
+	// TODO Auto-generated destructor stub
+}
+
+void LineGraph::update()
+{
+	//qDebug()  << "LineGraph::update";
+}
+
+void LineGraph::onVisible()
+{
+	qDebug()  << "LineGraph::onVisible";
+}
+
+void LineGraph::onRegenerated()
+{
+	qDebug()  << "LineGraph::onRegenerated";
+
+	if (_graphics2D->reset()) {
+		if (!_slatePro) {
+			_slatePro = _graphics2D->createFont(FONT_NAME_SLATE_PRO_CONDENSED, NULL, 20, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));
+			_slateProSub = _graphics2D->createFont(FONT_NAME_SLATE_PRO_CONDENSED, NULL, 10, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));
+			_slateProLight = _graphics2D->createFont(FONT_NAME_SLATE_PRO_LIGHT, NULL, 10, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));
+		}
+
+		// pie slices plus labels
+		double textWidth = 0.0, textHeight = 0.0;
+
+		_graphics2D->setFont(_slatePro);
+		QString titleText("Sample Line Graph");
+		_graphics2D->measureString(titleText, &textWidth, &textHeight);
+		_graphics2D->drawString(titleText, (_width - textWidth) / 2.0, (_height - 100.0));
+
+/*
+		_graphics2D->setGradient(_pieGradientYellowOrange);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 0.0, 60.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText1("16.6 %");
+		_graphics2D->measureString(qtyText1, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText1, _width / 2.0 + cos(30.0 * M_PI / 180.0) * _width *.25 - textWidth / 2.0,
+										 _height / 2.0 + 100.0 + sin(30.0 * M_PI / 180.0) * _width *.25 - textHeight / 2.0);
+
+
+		_graphics2D->setGradient(_pieGradientRedCrimson);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 60.0, 50.0);
+
+		_graphics2D->setColor(COLOR_WHITE);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText2("15 %");
+		_graphics2D->measureString(qtyText2, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText2, _width / 2.0 + cos(85.0 * M_PI / 180.0) * _width *.25 - textWidth / 2.0,
+										 _height / 2.0 + 100.0 + sin(85.0 * M_PI / 180.0) * _width *.25 - textHeight / 2.0);
+
+		_graphics2D->setGradient(_pieGradientGreenPine);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 110.0, 30.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText3("8.3 %");
+		_graphics2D->measureString(qtyText3, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText3, _width / 2.0 + cos(125.0 * M_PI / 180.0) * _width *.25 - textWidth / 2.0,
+										 _height / 2.0 + 100.0 + sin(125.0 * M_PI / 180.0) * _width *.25 - textHeight / 2.0);
+
+		_graphics2D->setGradient(_pieGradientBlueSlate);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 140.0, 70.0);
+
+		_graphics2D->setColor(COLOR_WHITE);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText4("19 %");
+		_graphics2D->measureString(qtyText4, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText4, _width / 2.0 + cos(175.0 * M_PI / 180.0) * _width *.25 - textWidth / 2.0,
+										 _height / 2.0 + 100.0 + sin(175.0 * M_PI / 180.0) * _width *.25 - textHeight / 2.0);
+
+		_graphics2D->setGradient(_pieGradientPurpleViolet);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 210.0, 20.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText5("4.1 %");
+		_graphics2D->measureString(qtyText5, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText5, 50.0, 340.0);
+
+		_graphics2D->setStroke(_thinStroke);
+		double* lineX = new double[3] { 100.0, 100.0, _width / 2.0 + cos(220.0 * M_PI / 180.0) * _width * 0.25 };
+		double* lineY = new double[3] { 400.0, 450.0, _height / 2.0 + 100.0 + sin(220.0 * M_PI / 180.0) * _width * 0.25 };
+		_graphics2D->drawPolyline(lineX, lineY, 3);
+
+		_graphics2D->setGradient(_pieGradientCyanAcqua);
+		_graphics2D->fillArc(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375, 230.0, 130.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setFont(_slateProLight);
+		QString qtyText6("30 %");
+		_graphics2D->measureString(qtyText6, &textWidth, &textHeight);
+		_graphics2D->drawString(qtyText6, _width / 2.0 + cos(292.0 * M_PI / 180.0) * _width *.25 - textWidth / 2.0,
+										 _height / 2.0 + 100.0 + sin(292.0 * M_PI / 180.0) * _width *.25 - textHeight / 2.0);
+*/
+
+		// outlines
+/*
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(0.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(0.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(60.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(60.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(110.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(110.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(140.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(140.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(210.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(210.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(230.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(230.0 * M_PI / 180.0) * _width *.375);
+		_graphics2D->drawLine(_width / 2.0, _height / 2.0 + 100.0,
+							  _width / 2.0 + cos(360.0 * M_PI / 180.0) * _width *.375,
+							  _height / 2.0 + 100.0 + sin(360.0 * M_PI / 180.0) * _width *.375);
+
+		_graphics2D->drawOval(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375);
+*/
+
+		_graphics2D->setStroke(_defaultStroke);
+		_graphics2D->drawLine(50.0, 300.0, _width - 50.0, 300.0);
+		_graphics2D->drawLine(50.0, 300.0, 50.0, (_height - 125.0));
+		_graphics2D->drawLine(_width - 50.0, 300.0, _width - 50.0, (_height - 125.0));
+
+
+		// Legend
+
+		_graphics2D->setFont(_slateProSub);
+		QString legendTitleText("Legend");
+		_graphics2D->drawString(legendTitleText, 50.0, 240.0);
+
+		_graphics2D->setFont(_slateProLight);
+/*
+		_graphics2D->setGradient(_pieGradientYellowOrange);
+		_graphics2D->fillRect(50.0, 20.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(50.0, 20.0, 50.0, 50.0);
+*/
+		QString legendText1("item 1");
+		_graphics2D->drawString(legendText1, 120.0, 30.0);
+
+/*
+		_graphics2D->setGradient(_pieGradientRedCrimson);
+		_graphics2D->fillRect(50.0, 90.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(50.0, 90.0, 50.0, 50.0);
+*/
+		QString legendText2("item 2");
+		_graphics2D->drawString(legendText2, 120.0, 100.0);
+
+/*
+		_graphics2D->setGradient(_pieGradientGreenPine);
+		_graphics2D->fillRect(50.0, 160.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(50.0, 160.0, 50.0, 50.0);
+*/
+
+		QString legendText3("item 3");
+		_graphics2D->drawString(legendText3, 120.0, 170.0);
+
+/*
+		_graphics2D->setGradient(_pieGradientBlueSlate);
+		_graphics2D->fillRect(_width / 2.0 + 50.0, 20.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(_width / 2.0 + 50.0, 20.0, 50.0, 50.0);
+*/
+
+		QString legendText4("item 4");
+		_graphics2D->drawString(legendText4, _width / 2.0 + 120.0, 30.0);
+
+/*
+		_graphics2D->setGradient(_pieGradientPurpleViolet);
+		_graphics2D->fillRect(_width / 2.0 + 50.0, 90.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(_width / 2.0 + 50.0, 90.0, 50.0, 50.0);
+*/
+
+		QString legendText5("item 5");
+		_graphics2D->drawString(legendText5, _width / 2.0 + 120.0, 100.0);
+
+/*
+		_graphics2D->setGradient(_pieGradientCyanAcqua);
+		_graphics2D->fillRect(_width / 2.0 + 50.0, 160.0, 50.0, 50.0);
+
+		_graphics2D->setColor(COLOR_BLACK);
+		_graphics2D->setStroke(_thinStroke);
+		_graphics2D->drawRect(_width / 2.0 + 50.0, 160.0, 50.0, 50.0);
+*/
+
+		QString legendText6("item 6");
+		_graphics2D->drawString(legendText6, _width / 2.0 + 120.0, 170.0);
+
+
+		_graphics2D->done();
+
+		setStale(true);
+	}
+}
+
