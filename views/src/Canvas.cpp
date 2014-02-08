@@ -82,15 +82,15 @@ int Canvas::createFont(const QString& fontFileName, const QString& fontMetricsFi
 	QString* fontMetricsFilename = NULL;
 	QString* fontChars = NULL;
 	if (fontMetricsFileName.size() > 0) {
-		fontMetricsFilename = &fontMetricsFileName;
+		fontMetricsFilename = (QString*)&fontMetricsFileName;
 	}
 	if (fontCharacters.size() > 0) {
-		fontChars = &fontCharacters;
+		fontChars = (QString*)&fontCharacters;
 	}
 
-	Font* createFont(fontFileName, const QString* fontMetricsFilename, int pointSize, int dpi, const QString* fontChars);
+	Font* font = _graphics2D->createFont(fontFileName, fontMetricsFilename, pointSize, dpi, fontChars);
 	_fontID++;
-	_fontIDMap.insert(_strokeID, stroke);
+	_fontIDMap.insert(_fontID, font);
 
 	return _fontID;
 

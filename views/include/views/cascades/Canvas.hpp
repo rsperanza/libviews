@@ -45,7 +45,7 @@ public:
     	void done();
 
     	// Creates a new font context and loads a font for use with the API.
-    	int createFont(const QString& fontFileName, const QString* fontMetricsFileName, int pointSize, int dpi, const QString* fontCharacters = NULL);
+    	int createFont(const QString& fontFileName, const QString& fontMetricsFileName, int pointSize, int dpi, const QString& fontCharacters);
 
     	// create a new stroke type
         int createStroke(float width = 1.0, int cap = CAP_NONE, int join = JOIN_NONE, float miterLimit = 0.0, QVariantList dash = *(new QVariantList()), int dashCount = 0, float dashPhase = 0.0);
@@ -183,7 +183,7 @@ private slots:
 
 protected:
 	int _fontID;
-	QMap<int,Font> _fontIDMap;
+	QMap<int,Font*> _fontIDMap;
 	int _gradientID;
 	QMap<int,Gradient*> _gradientIDMap;
 	int _imageTextureID;
