@@ -183,6 +183,8 @@ public Q_SLOTS:
 	void setStale(bool stale);
 	void setAltered(bool stale);
 	void setCapture(bool capture);
+
+	virtual void onRegenerated() {};
 	ImageData* getRenderedImage();
 
 protected:

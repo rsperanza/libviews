@@ -44,13 +44,13 @@ public:
 
 	void update();
 
-	void onAltered();
+	void onRegenerated();
 
 private:
 	float*     _evenDashes;
 	Stroke*    _defaultStroke;
 	Stroke*    _evenDashesStroke;
-	Color*     _lineColor;
+	GLColor*     _lineColor;
 };
 
 #endif /* VIDEO_OVERLAY_HPP */

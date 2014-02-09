@@ -15,6 +15,7 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 {
 	// register some new types for QML
     qmlRegisterType < PieChart >      ("com.example.views", 1, 0, "PieChart");
+    qmlRegisterType < LineGraph >      ("com.example.views", 1, 0, "LineGraph");
 
 	_dataPath = QDir::current().absoluteFilePath("data");
 

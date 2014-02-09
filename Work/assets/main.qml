@@ -6,7 +6,8 @@ import com.example.views 1.0
 Page {
     Container {
         layout: StackLayout {}
-        
+
+/*        
     	Canvas {
     		id: workCanvas
            	objectName: "workCanvas"
@@ -77,7 +78,7 @@ Page {
 			}
 		
 		}
-/*            
+*/		
         ViewControl {
             id: workVC
             objectName: "workVC"
@@ -85,6 +86,7 @@ Page {
             horizontalAlignment: HorizontalAlignment.Fill
             
             attachedObjects: [
+/*            
             	PieChart {
             		id: pieChart
             		
@@ -96,9 +98,20 @@ Page {
 					height: 0
 					enabled: false
             	}
+*/            	
+            	LineGraph {
+            		id: lineGraph
+            		
+					windowID: "lineGraph1"
+					z: -1
+					x: 0
+					y: 0
+					width: 0
+					height: 0
+					enabled: false
+            	}
             ]
         }
-*/
     }
     actions: [
         ActionItem {

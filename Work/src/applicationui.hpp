@@ -11,6 +11,7 @@
 
 
 #include "views/Views.hpp"
+#include "LineGraph.hpp"
 #include "PieChart.hpp"
 
 namespace bb { namespace cascades { class Application; }}

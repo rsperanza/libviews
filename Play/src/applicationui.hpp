@@ -11,13 +11,7 @@
 
 
 #include "views/Views.hpp"
-//#include "views/stereoscopic/Photo3DView.hpp"
-#include "MouseTest.hpp"
-#include "SketchPad.hpp"
-#include "Test2D.hpp"
 #include "VideoOverlay.hpp"
-
-#include "SignaturePad.hpp"
 
 namespace bb { namespace cascades { class Application; }}
 
@@ -48,27 +42,7 @@ public Q_SLOTS:
 	QString fileURL(QString filePath);
 
 private:
-	//NavigationPane  *m_navPane;
-/*
-	Photo3DView *_photo3DView;
-	Photo3DView *_photo3DView_HDMI;
-*/
-	View *_baseView_HDMI;
-	VideoOverlay *_videoOverlayView_HDMI;
-
-	PhotoView *_photoView;
-	VideoOverlay *_videoOverlayView;
-	VideoOverlay *_videoOverlayView2;
-	SketchPad *_sketchPad;
-	SketchPad *_signPad;
-	Test2D *_graphView;
-	Test2D *_graphView_HDMI;
-	MouseTest *_mouseTest;
-	MouseTest *_mouseTest_HDMI;
-
 	InvokeManager _invokeManager;
-
-	SignaturePad* _signaturePad;
 	QString _dataPath;
 	bb::cascades::Application *_app;
 };

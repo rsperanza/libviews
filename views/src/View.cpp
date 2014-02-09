@@ -407,6 +407,8 @@ int View::regenerate() {
 		Graphics::unlockRendering();
 	}
 
+	onRegenerated();
+
 	emit regenerated();
 
 	setAltered(false);

@@ -44,7 +44,8 @@ public:
 
 	void update();
 
-	void onAltered();
+public Q_SLOTS:
+	void onRegenerated();
 	void onVisible();
 
 private:

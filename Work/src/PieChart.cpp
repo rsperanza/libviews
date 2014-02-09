@@ -73,16 +73,11 @@ void PieChart::onVisible()
 	qDebug()  << "PieChart::onVisible";
 }
 
-void PieChart::onAltered()
+void PieChart::onRegenerated()
 {
-	qDebug()  << "PieChart::onAltered";
+	qDebug()  << "PieChart::onRegenerated";
 
 	if (_graphics2D->reset()) {
-		//_graphics2D->setBackground(COLOR_YELLOW);
-		//_graphics2D->clearRect(0, 0, 100, 100);
-
-		//_graphics2D->shear(0.25, 0.0);
-
 		if (!_slatePro) {
 			_slatePro = _graphics2D->createFont(FONT_NAME_SLATE_PRO_CONDENSED, NULL, 20, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));
 			_slateProSub = _graphics2D->createFont(FONT_NAME_SLATE_PRO_CONDENSED, NULL, 10, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));

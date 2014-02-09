@@ -3850,12 +3850,12 @@ void Graphics2D::renderDrawString(int commandCount)
 
 
     if (!_renderFont) {
-        //qDebug() << "Graphics2D::renderDrawString: Font must not be null\n";
+        qCritical() << "Graphics2D::renderDrawString: Font must not be null\n";
         return;
     }
 
     if (!_renderFont->initialized) {
-        //qDebug() << "Graphics2D::renderDrawString: Font has not been loaded\n";
+    	qCritical() << "Graphics2D::renderDrawString: Font has not been loaded\n";
         return;
     }
 

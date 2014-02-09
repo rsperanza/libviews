@@ -3,55 +3,31 @@ BASEDIR =  $$quote($$_PRO_FILE_PWD_)
 
 device {
     CONFIG(debug, debug|release) {
-        SOURCES +=  $$quote($$BASEDIR/src/MouseTest.cpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.cpp) \
-                 $$quote($$BASEDIR/src/SketchPad.cpp) \
-                 $$quote($$BASEDIR/src/Test2D.cpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.cpp) \
+        SOURCES +=  $$quote($$BASEDIR/src/VideoOverlay.cpp) \
                  $$quote($$BASEDIR/src/applicationui.cpp) \
                  $$quote($$BASEDIR/src/main.cpp)
 
-        HEADERS +=  $$quote($$BASEDIR/src/MouseTest.hpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.hpp) \
-                 $$quote($$BASEDIR/src/SketchPad.hpp) \
-                 $$quote($$BASEDIR/src/Test2D.hpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.hpp) \
+        HEADERS +=  $$quote($$BASEDIR/src/VideoOverlay.hpp) \
                  $$quote($$BASEDIR/src/applicationui.hpp)
     }
 
     CONFIG(release, debug|release) {
-        SOURCES +=  $$quote($$BASEDIR/src/MouseTest.cpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.cpp) \
-                 $$quote($$BASEDIR/src/SketchPad.cpp) \
-                 $$quote($$BASEDIR/src/Test2D.cpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.cpp) \
+        SOURCES +=  $$quote($$BASEDIR/src/VideoOverlay.cpp) \
                  $$quote($$BASEDIR/src/applicationui.cpp) \
                  $$quote($$BASEDIR/src/main.cpp)
 
-        HEADERS +=  $$quote($$BASEDIR/src/MouseTest.hpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.hpp) \
-                 $$quote($$BASEDIR/src/SketchPad.hpp) \
-                 $$quote($$BASEDIR/src/Test2D.hpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.hpp) \
+        HEADERS +=  $$quote($$BASEDIR/src/VideoOverlay.hpp) \
                  $$quote($$BASEDIR/src/applicationui.hpp)
     }
 }
 
 simulator {
     CONFIG(debug, debug|release) {
-        SOURCES +=  $$quote($$BASEDIR/src/MouseTest.cpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.cpp) \
-                 $$quote($$BASEDIR/src/SketchPad.cpp) \
-                 $$quote($$BASEDIR/src/Test2D.cpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.cpp) \
+        SOURCES +=  $$quote($$BASEDIR/src/VideoOverlay.cpp) \
                  $$quote($$BASEDIR/src/applicationui.cpp) \
                  $$quote($$BASEDIR/src/main.cpp)
 
-        HEADERS +=  $$quote($$BASEDIR/src/MouseTest.hpp) \
-                 $$quote($$BASEDIR/src/SignaturePad.hpp) \
-                 $$quote($$BASEDIR/src/SketchPad.hpp) \
-                 $$quote($$BASEDIR/src/Test2D.hpp) \
-                 $$quote($$BASEDIR/src/VideoOverlay.hpp) \
+        HEADERS +=  $$quote($$BASEDIR/src/VideoOverlay.hpp) \
                  $$quote($$BASEDIR/src/applicationui.hpp)
     }
 }

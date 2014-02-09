@@ -58,6 +58,7 @@ private:
 	Font*      _slatePro;
 	Font*      _slateProSub;
 	Font*      _slateProLight;
+	Font*      _slateProMedium;
 
 	Graphics2D* _graphics2D;
 };

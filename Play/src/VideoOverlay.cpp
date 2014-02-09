@@ -36,7 +36,7 @@ VideoOverlay::VideoOverlay(ViewDisplay display) : VideoView(display)
 	_evenDashes = new float[2] { 20.0, 10.0 };
 	_evenDashesStroke = _graphics2D->createStroke(5.0, CAP_NONE, JOIN_NONE, 0.0, _evenDashes, 2, 0.0);
 	_defaultStroke = _graphics2D->createStroke(5.0);
-	_lineColor = new Color { 1.0f, 1.0f, 0.5f, 0.75f };
+	_lineColor = new GLColor { 1.0f, 1.0f, 0.5f, 0.75f };
 }
 
 VideoOverlay::~VideoOverlay() {
@@ -48,7 +48,7 @@ void VideoOverlay::update()
 	//qDebug()  << "VideoOverlay::update";
 }
 
-void VideoOverlay::onAltered()
+void VideoOverlay::onRegenerated()
 {
 	qDebug()  << "VideoOverlay::onAltered";
 
