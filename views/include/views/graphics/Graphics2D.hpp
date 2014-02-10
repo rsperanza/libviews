@@ -312,7 +312,7 @@ VeraSeBd.ttf	Bitstream Vera Serif Bold
 
 // limits
 #define MAX_RENDER_COMMANDS	10000
-#define MAX_VERTEX_COORDINATES	5000
+#define MAX_VERTEX_COORDINATES	1000
 
 class Q_DECL_EXPORT Graphics2D : public Graphics {
 
@@ -649,7 +649,6 @@ protected:
 
 	GLuint* _renderVertexIndices;
 	GLfloat* _renderVertexCoords;
-	GLfloat* _renderColors;
 	GLfloat* _renderTextureCoords;
 
 #ifdef GLES2

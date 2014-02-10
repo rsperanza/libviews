@@ -260,12 +260,6 @@ Graphics2D::Graphics2D(int display, Graphics2D* master) : Graphics(display, mast
 		_renderTextureCoords = new GLfloat[MAX_VERTEX_COORDINATES];
 	}
 
-	if (_master2D != this) {
-		_renderColors = NULL;
-	} else {
-		_renderColors = new GLfloat[2*MAX_VERTEX_COORDINATES];
-	}
-
 #ifdef GLES2
 	// allocate transformation matrices
 
@@ -369,10 +363,6 @@ Graphics2D::~Graphics2D()
 
 	if (_renderTextureCoords) {
 		delete _renderTextureCoords;
-	}
-
-	if (_renderColors) {
-		delete _renderColors;
 	}
 }
 
@@ -1015,11 +1005,11 @@ void Graphics2D::setBackground(const GLColor& color)
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = color.blue;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = color.alpha;
 
-	//qDebug()  << "Graphics2D::setBackground " << _drawFloats[_currentDrawFloatIndex-4] << "," << _drawFloats[_currentDrawFloatIndex-3] << " " <<  _drawFloats[_currentDrawFloatIndex-2] << "," << _drawFloats[_currentDrawFloatIndex-1];
+	//qDebug()  << "Graphics2D::setBackground " << _drawFloats[_master2D->_currentDrawFloatIndex-4] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-3] << " " <<  _drawFloats[_master2D->_currentDrawFloatIndex-2] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-1];
 
 	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_SET_BACKGROUND;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_BACKGROUND;
 }
 
 // Sets this graphics context's current color to the specified color.
@@ -1039,7 +1029,7 @@ void Graphics2D::setColor(const GLColor& color)
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = color.blue;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = color.alpha;
 
-	//qDebug()  << "Graphics2D::setColor " << _drawFloats[_currentDrawFloatIndex-4] << "," << _drawFloats[_currentDrawFloatIndex-3] << " " <<  _drawFloats[_currentDrawFloatIndex-2] << "," << _drawFloats[_currentDrawFloatIndex-1];
+	//qDebug()  << "Graphics2D::setColor " << _drawFloats[_master2D->_currentDrawFloatIndex-4] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-3] << " " <<  _drawFloats[_master2D->_currentDrawFloatIndex-2] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-1];
 
 	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] = _currentDrawFloatIndex-1;
 
@@ -1053,11 +1043,11 @@ void Graphics2D::setFont(Font* font)
 
 	_master2D->_currentFont = font;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = font;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = font;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_FONT;
 }
@@ -1068,21 +1058,21 @@ void Graphics2D::setGradient(Gradient* gradient)
 
 	_master2D->_currentGradient = gradient;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = gradient;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = gradient;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_GRADIENT;
 
 	_master2D->_currentImageTexture = NULL;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = NULL;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = NULL;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_IMAGE_TEXTURE;
 }
@@ -1093,21 +1083,21 @@ void Graphics2D::setImageTexture(ImageTexture* imageTexture)
 
 	_master2D->_currentImageTexture = imageTexture;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = imageTexture;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = imageTexture;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_IMAGE_TEXTURE;
 
 	_master2D->_currentGradient = NULL;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = NULL;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = NULL;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_GRADIENT;
 }
@@ -1118,11 +1108,11 @@ void Graphics2D::setStroke(Stroke *stroke)
 
 	_master2D->_currentStroke = stroke;
 
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = stroke;
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = stroke;
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_STROKE;
 }
@@ -1147,9 +1137,9 @@ void Graphics2D::drawArc(double x, double y, double width, double height, double
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)startAngle;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)arcAngle;
 
-	//qDebug()  << "Graphics2D::drawArc segment " <<  _drawFloats[_currentDrawFloatIndex-4] << "," << _drawFloats[_currentDrawFloatIndex-3] << " " <<  _drawFloats[_currentDrawFloatIndex-2] << "," << _drawFloats[_currentDrawFloatIndex-1];
+	//qDebug()  << "Graphics2D::drawArc segment " <<  _drawFloats[_master2D->_currentDrawFloatIndex-4] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-3] << " " <<  _drawFloats[_master2D->_currentDrawFloatIndex-2] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-1];
 
-	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_ARC;
 }
@@ -1226,7 +1216,7 @@ void Graphics2D::drawImage(ImageData* image, double dx1, double dy1, double dx2,
 // Draws as much of the specified area of the specified image as is currently available, scaling it on the fly to fit inside the specified area of the destination drawable surface.
 void Graphics2D::drawImage(ImageData* image, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2, GLColor backgroundColor)
 {
-	qDebug()  << "Graphics2D::drawImage: " << image << " dest: " << dx1 << " " << dy1 << " " << dx2 << " " << dy2 << " src: " << sx1 << " " << sy1 << " " << sx2 << " " << sy2  << "color: (rgba) " << backgroundColor.red << "," << backgroundColor.green << "," << backgroundColor.blue << "," << backgroundColor.alpha;
+	//qDebug()  << "Graphics2D::drawImage: " << image << " dest: " << dx1 << " " << dy1 << " " << dx2 << " " << dy2 << " src: " << sx1 << " " << sy1 << " " << sx2 << " " << sy2  << "color: (rgba) " << backgroundColor.red << "," << backgroundColor.green << "," << backgroundColor.blue << "," << backgroundColor.alpha;
 
 	GLuint  photo = 0;
 	float tex_x = 1.0, tex_y = 1.0;
@@ -1328,18 +1318,18 @@ void Graphics2D::drawLine(double x1, double y1, double x2, double y2)
 {
 	//qDebug()  << "Graphics2D::drawLine: " << x1 << "," << y1 << " to " << x2 << "," << y2;
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)x1;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)y1;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)x2;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)y2;
 
-	//qDebug()  << "Graphics2D::drawLine segment " <<  _drawFloats[_currentDrawFloatIndex-4] << "," << _drawFloats[_currentDrawFloatIndex-3] << " " <<  _drawFloats[_currentDrawFloatIndex-2] << "," << _drawFloats[_currentDrawFloatIndex-1];
+	//qDebug()  << "Graphics2D::drawLine segment " <<  _drawFloats[_master2D->_currentDrawFloatIndex-4] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-3] << " " <<  _drawFloats[_master2D->_currentDrawFloatIndex-2] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-1];
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_DRAW_LINE;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_LINE;
 }
 
 // Draws the outline of an oval.
@@ -1392,7 +1382,7 @@ void Graphics2D::drawPolygon(double* xPoints, double* yPoints, int nPoints)
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	for(int index = 0; index < numberPoints; index++) {
 		if (index < (numberPoints-1)) {
@@ -1404,9 +1394,9 @@ void Graphics2D::drawPolygon(double* xPoints, double* yPoints, int nPoints)
 		}
 	}
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_DRAW_POLYLINE;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_POLYLINE;
 }
 
 // Draws a sequence of connected lines defined by arrays of x and y coordinates.
@@ -1447,16 +1437,16 @@ void Graphics2D::drawPolyline(double* xPoints, double* yPoints, int nPoints)
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	for(int index = 0; index < numberPoints; index++) {
 		_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = xPoints[index];
 		_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = yPoints[index];
 	}
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_DRAW_POLYLINE;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_POLYLINE;
 }
 
 // Draws the outline of the specified rectangle.
@@ -1478,7 +1468,7 @@ void Graphics2D::drawRect(double x, double y, double width, double height)
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = x;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = y;
@@ -1495,9 +1485,9 @@ void Graphics2D::drawRect(double x, double y, double width, double height)
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = x;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = y;
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_DRAW_POLYLINE;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_POLYLINE;
 }
 
 
@@ -1520,7 +1510,7 @@ void Graphics2D::drawRoundRect(double x, double y, double width, double height, 
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = x;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = y;
@@ -1531,9 +1521,9 @@ void Graphics2D::drawRoundRect(double x, double y, double width, double height, 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = arcWidth;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = arcHeight;
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_DRAW_ROUNDRECT;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_DRAW_ROUNDRECT;
 
 }
 
@@ -1541,21 +1531,15 @@ void Graphics2D::drawRoundRect(double x, double y, double width, double height, 
 // Measures the bounding box of the text of the specified String, using the current font in the Graphics2D context.
 void Graphics2D::measureString(QString text, double* width, double* height)
 {
-	wchar_t *wtext;
-	double x, y;
-
 	qDebug() << "Graphics2D::measureString: text : " << text;
+
+	wchar_t *wtext;
 
 	wtext = new wchar_t[text.size()+1];
 	int length = text.toWCharArray(wtext);
 	wtext[text.size()] = 0;
 
     int i, j, c;
-    GLfloat *vertices;
-    GLfloat *_renderTextureCoords;
-    GLushort* indices;
-
-    float pen_x = 0.0f;
 
     if (!_currentFont) {
         qCritical() << "Graphics2D::measureString: Font must not be null\n";
@@ -1626,11 +1610,11 @@ void Graphics2D::drawString(QString text, int x, int y)
 // Draws the text given by the specified string, using this graphics context's current font and color.
 void Graphics2D::drawString(QString text, double x, double y)
 {
-	_master2D->_drawPointerIndices[_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
 
-	_master2D->_drawPointers[_currentDrawPointerIndex++] = (void*)(&(new QString())->append(text));
+	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = (void*)(new QString(text));
 
-	_master2D->_drawPointerIndices[_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
 
 	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
@@ -1662,9 +1646,9 @@ void Graphics2D::fillArc(double x, double y, double width, double height, double
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)startAngle;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = (GLfloat)arcAngle;
 
-	//qDebug()  << "Graphics2D::drawArc segment " <<  _drawFloats[_currentDrawFloatIndex-4] << "," << _drawFloats[_currentDrawFloatIndex-3] << " " <<  _drawFloats[_currentDrawFloatIndex-2] << "," << _drawFloats[_currentDrawFloatIndex-1];
+	//qDebug()  << "Graphics2D::drawArc segment " <<  _drawFloats[_master2D->_currentDrawFloatIndex-4] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-3] << " " <<  _drawFloats[_master2D->_currentDrawFloatIndex-2] << "," << _drawFloats[_master2D->_currentDrawFloatIndex-1];
 
-	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
 	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_FILL_ARC;
 }
@@ -1702,7 +1686,7 @@ void Graphics2D::fillRect(double x, double y, double width, double height)
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = x;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = y + height;
@@ -1729,9 +1713,9 @@ void Graphics2D::fillRect(double x, double y, double width, double height)
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = 1.0;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = 0.0;
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_FILL_POLYGON;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_FILL_POLYGON;
 }
 
 // Draws a closed polygon defined by arrays of x and y coordinates.
@@ -1770,7 +1754,7 @@ void Graphics2D::fillPolygon(double* xPoints, double* yPoints, int nPoints)
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	float x = 0.0, y = 0.0, minX = 1.0e6, minY = 1.0e6, maxX = -1.0e6, maxY = -1.0e6;
 
@@ -1814,9 +1798,9 @@ void Graphics2D::fillPolygon(double* xPoints, double* yPoints, int nPoints)
 		}
 	}
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] =_master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_FILL_POLYGON;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_FILL_POLYGON;
 }
 
 // Draws an outlined round-cornered rectangle using this graphics context's current color.
@@ -1838,7 +1822,7 @@ void Graphics2D::fillRoundRect(double x, double y, double width, double height, 
 	_master2D->_drawIntIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawIntIndex-1;
 
 
-	_master2D->_drawFloatIndices[_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawFloatIndex;
 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = x;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = y;
@@ -1849,9 +1833,9 @@ void Graphics2D::fillRoundRect(double x, double y, double width, double height, 
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = arcWidth;
 	_master2D->_drawFloats[_master2D->_currentDrawFloatIndex++] = arcHeight;
 
-	_master2D->_drawFloatIndices[_commandCount*2+1] =_master2D-> _currentDrawFloatIndex-1;
+	_master2D->_drawFloatIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawFloatIndex-1;
 
-	_master2D->_drawCommands[_commandCount++] = RENDER_FILL_ROUNDRECT;
+	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_FILL_ROUNDRECT;
 
 }
 
@@ -2469,30 +2453,38 @@ void Graphics2D::renderDrawLine(int commandCount)
 		dashCoords[3] = y2;
 	}
 
-
+	int renderIndex = 0;
 	for(int index = 0; index < dashPoints; index += 2) {
 		if (fabs(dy) > fabs(dx)) {
-			_renderVertexCoords[index*4+0] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+1] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+2] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+3] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+4] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+5] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+6] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+7] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+0] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+1] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+2] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+3] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+4] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+5] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+6] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+7] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / (2.0 * length));
 		} else {
-			_renderVertexCoords[index*4+0] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+1] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+2] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+3] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+4] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+5] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+6] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / (2.0 * length));
-			_renderVertexCoords[index*4+7] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+0] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+1] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+2] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+3] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+4] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+5] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+6] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / (2.0 * length));
+			_renderVertexCoords[renderIndex*4+7] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / (2.0 * length));
+		}
+
+		renderIndex++;
+
+		if ((renderIndex*8 + 8) > MAX_VERTEX_COORDINATES) {
+			renderDrawTriangles(renderIndex, 4);
+
+			renderIndex = 0;
 		}
 	}
 
-	renderDrawTriangles(dashPoints/2, 4);
+	renderDrawTriangles(renderIndex, 4);
 
 	if (dashCoords) {
 		delete dashCoords;
@@ -2656,6 +2648,7 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 		}
 	}
 
+	int renderIndex = 0;
 	for(int index = 0; index < dashPoints; index += 2) {
 		dx = ((GLfloat)dashCoords[index*2+2] - (GLfloat)dashCoords[index*2+0]);
 		dy = ((GLfloat)dashCoords[index*2+3] - (GLfloat)dashCoords[index*2+1]);
@@ -2683,9 +2676,16 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 			_renderVertexCoords[index*4+7] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
 		}
 
+		renderIndex++;
+
+		if ((renderIndex*4 + 8) > MAX_VERTEX_COORDINATES) {
+			renderDrawTriangles(renderIndex, 4);
+
+			renderIndex = 0;
+		}
 	}
 
-	renderDrawTriangles(dashPoints/2, 4);
+	renderDrawTriangles(renderIndex, 4);
 
 	if (dashCoords) {
 		delete dashCoords;
@@ -2808,7 +2808,6 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 	height     = _drawFloats[_drawFloatIndices[commandCount*2+0]+3];
 	startAngle = _drawFloats[_drawFloatIndices[commandCount*2+0]+4];
 	arcAngle   = _drawFloats[_drawFloatIndices[commandCount*2+0]+5];
-
 
 	radiusX = width / 2.0;
 	radiusY = height / 2.0;
@@ -3007,6 +3006,8 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 						_renderTextureCoords[renderIndex*6+4] = (GLfloat)drawU;
 						_renderTextureCoords[renderIndex*6+5] = (GLfloat)drawV;
 					} else {
+						qDebug()  << "Graphics2D::renderDrawArc: renderIndex: " << renderIndex*8 << " " << (renderIndex*8+8);
+
 						if (fabs(dy) > fabs(dx)) {
 							_renderVertexCoords[renderIndex*8+0] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
 							_renderVertexCoords[renderIndex*8+1] = (GLfloat)drawY + (dx * _renderStroke->width / (2.0 * length));
@@ -3038,6 +3039,17 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 					lastV = drawV;
 
 					renderIndex++;
+
+					if ((renderIndex*8 + 8) > MAX_VERTEX_COORDINATES) {
+						if (fillArc) {
+							renderDrawTriangles(renderIndex, 3);
+						} else {
+							renderDrawTriangles(renderIndex, 4);
+						}
+
+						renderIndex = 0;
+					}
+
 				}
 			} else {
 				lastX = drawX;
@@ -4052,6 +4064,7 @@ void Graphics2D::renderFillPolygon(int commandCount)
 		v = (y - minY) / (maxY - minY);
 	}
 
+	int renderIndex = 0;
 
 	switch (nPoints) {
 	case 3:
@@ -4178,6 +4191,15 @@ void Graphics2D::renderFillPolygon(int commandCount)
 				_renderTextureCoords[index*6+4] = (GLfloat)u;
 				_renderTextureCoords[index*6+5] = (GLfloat)v;
 			}
+
+			renderIndex++;
+
+			if ((renderIndex*6 + 6) > MAX_VERTEX_COORDINATES) {
+				renderDrawTriangles(renderIndex, 3);
+
+				renderIndex = 0;
+			}
+
 		}
 		break;
 	}
@@ -4194,7 +4216,7 @@ void Graphics2D::renderFillPolygon(int commandCount)
 		break;
 
 	default:
-		renderDrawTriangles(nPoints-1, 3);
+		renderDrawTriangles(renderIndex, 3);
 		break;
 	}
 

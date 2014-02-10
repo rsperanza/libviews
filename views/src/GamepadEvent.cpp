@@ -181,7 +181,7 @@ QObject* GamepadEvent::target() const
  */
 bool GamepadEvent::isAButtonDown() const
 {
-	return (_buttons & SCREEN_A_GAME_BUTTON);
+	return ((_buttons & SCREEN_A_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -191,7 +191,7 @@ bool GamepadEvent::isAButtonDown() const
  */
 bool GamepadEvent::isBButtonDown() const
 {
-	return (_buttons & SCREEN_B_GAME_BUTTON);
+	return ((_buttons & SCREEN_B_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -201,7 +201,7 @@ bool GamepadEvent::isBButtonDown() const
  */
 bool GamepadEvent::isCButtonDown() const
 {
-	return (_buttons & SCREEN_C_GAME_BUTTON);
+	return ((_buttons & SCREEN_C_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -211,7 +211,7 @@ bool GamepadEvent::isCButtonDown() const
  */
 bool GamepadEvent::isXButtonDown() const
 {
-	return (_buttons & SCREEN_X_GAME_BUTTON);
+	return ((_buttons & SCREEN_X_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -221,7 +221,7 @@ bool GamepadEvent::isXButtonDown() const
  */
 bool GamepadEvent::isYButtonDown() const
 {
-	return (_buttons & SCREEN_Y_GAME_BUTTON);
+	return ((_buttons & SCREEN_Y_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -231,7 +231,7 @@ bool GamepadEvent::isYButtonDown() const
  */
 bool GamepadEvent::isZButtonDown() const
 {
-	return (_buttons & SCREEN_Z_GAME_BUTTON);
+	return ((_buttons & SCREEN_Z_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -241,7 +241,7 @@ bool GamepadEvent::isZButtonDown() const
  */
 bool GamepadEvent::isMenu1ButtonDown() const
 {
-	return (_buttons & SCREEN_MENU1_GAME_BUTTON);
+	return ((_buttons & SCREEN_MENU1_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -251,7 +251,7 @@ bool GamepadEvent::isMenu1ButtonDown() const
  */
 bool GamepadEvent::isMenu2ButtonDown() const
 {
-	return (_buttons & SCREEN_MENU2_GAME_BUTTON);
+	return ((_buttons & SCREEN_MENU2_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -261,7 +261,7 @@ bool GamepadEvent::isMenu2ButtonDown() const
  */
 bool GamepadEvent::isMenu3ButtonDown() const
 {
-	return (_buttons & SCREEN_MENU3_GAME_BUTTON);
+	return ((_buttons & SCREEN_MENU3_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -271,7 +271,7 @@ bool GamepadEvent::isMenu3ButtonDown() const
  */
 bool GamepadEvent::isMenu4ButtonDown() const
 {
-	return (_buttons & SCREEN_MENU4_GAME_BUTTON);
+	return ((_buttons & SCREEN_MENU4_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -281,7 +281,7 @@ bool GamepadEvent::isMenu4ButtonDown() const
  */
 bool GamepadEvent::isLeft1ButtonDown() const
 {
-	return (_buttons & SCREEN_L1_GAME_BUTTON);
+	return ((_buttons & SCREEN_L1_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -291,7 +291,7 @@ bool GamepadEvent::isLeft1ButtonDown() const
  */
 bool GamepadEvent::isLeft2ButtonDown() const
 {
-	return (_buttons & SCREEN_L2_GAME_BUTTON);
+	return ((_buttons & SCREEN_L2_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -301,7 +301,7 @@ bool GamepadEvent::isLeft2ButtonDown() const
  */
 bool GamepadEvent::isLeft3ButtonDown() const
 {
-	return (_buttons & SCREEN_L3_GAME_BUTTON);
+	return ((_buttons & SCREEN_L3_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -311,7 +311,7 @@ bool GamepadEvent::isLeft3ButtonDown() const
  */
 bool GamepadEvent::isRight1ButtonDown() const
 {
-	return (_buttons & SCREEN_R1_GAME_BUTTON);
+	return ((_buttons & SCREEN_R1_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -321,7 +321,7 @@ bool GamepadEvent::isRight1ButtonDown() const
  */
 bool GamepadEvent::isRight2ButtonDown() const
 {
-	return (_buttons & SCREEN_R2_GAME_BUTTON);
+	return ((_buttons & SCREEN_R2_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -331,7 +331,7 @@ bool GamepadEvent::isRight2ButtonDown() const
  */
 bool GamepadEvent::isRight3ButtonDown() const
 {
-	return (_buttons & SCREEN_R3_GAME_BUTTON);
+	return ((_buttons & SCREEN_R3_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -341,7 +341,7 @@ bool GamepadEvent::isRight3ButtonDown() const
  */
 bool GamepadEvent::isDPadUpButtonDown() const
 {
-	return (_buttons & SCREEN_DPAD_UP_GAME_BUTTON);
+	return ((_buttons & SCREEN_DPAD_UP_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -351,7 +351,7 @@ bool GamepadEvent::isDPadUpButtonDown() const
  */
 bool GamepadEvent::isDPadDownButtonDown() const
 {
-	return (_buttons & SCREEN_DPAD_DOWN_GAME_BUTTON);
+	return ((_buttons & SCREEN_DPAD_DOWN_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -361,7 +361,7 @@ bool GamepadEvent::isDPadDownButtonDown() const
  */
 bool GamepadEvent::isRDPadLeftButtonDown() const
 {
-	return (_buttons & SCREEN_DPAD_LEFT_GAME_BUTTON);
+	return ((_buttons & SCREEN_DPAD_LEFT_GAME_BUTTON) != 0);
 }
 
 /*!
@@ -371,7 +371,7 @@ bool GamepadEvent::isRDPadLeftButtonDown() const
  */
 bool GamepadEvent::isRDPadRightButtonDown() const
 {
-	return (_buttons & SCREEN_DPAD_RIGHT_GAME_BUTTON);
+	return ((_buttons & SCREEN_DPAD_RIGHT_GAME_BUTTON) != 0);
 }
 
 	}

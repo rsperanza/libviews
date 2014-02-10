@@ -86,7 +86,6 @@ Page {
             horizontalAlignment: HorizontalAlignment.Fill
             
             attachedObjects: [
-/*            
             	PieChart {
             		id: pieChart
             		
@@ -98,7 +97,7 @@ Page {
 					height: 0
 					enabled: false
             	}
-*/            	
+/*            
             	LineGraph {
             		id: lineGraph
             		
@@ -110,6 +109,7 @@ Page {
 					height: 0
 					enabled: false
             	}
+*/            	
             ]
         }
     }

@@ -118,13 +118,51 @@ int Canvas::createStroke(float width, int cap, int join, float miterLimit, QVari
 // create a new gradient
 int Canvas::createGradient(int segments, QVariantList colors, QVariantList percentages, float radius, float angle, float originU, float originV)
 {
+	float *percentageValues = NULL;
+	GLColor* glColors = NULL;
 
+	if (percentages.size() > 0) {
+		percentageValues = new float[percentages.size()];
+		for(int index = 0; index < percentages.size(); index++) {
+			percentageValues[index] = percentages[index].value<float>();
+		}
+	}
+
+	if (colors.size() > 0) {
+		glColors = new GLColor[colors.size()];
+		for(int index = 0; index < colors.size(); index++) {
+			percentageValues[index] = percentages[index].value<float>();
+		}
+
+	    Gradient* gradient = _graphics2D->createGradient(segments, glColors, percentageValues, radius, angle, originU, originV);
+		_gradientID++;
+		_gradientIDMap.insert(_gradientID, gradient);
+	} else {
+		return -1;
+	}
+
+	return _gradientID;
 }
 
 // create a new image texture
 int Canvas::createImageTexture(ImageData* image, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin)
 {
+/*
+	float *dashValues = NULL;
 
+	if (dash.size() > 0) {
+		dashValues = new float[dash.size()];
+		for(int index = 0; index < dash.size(); index++) {
+			dashValues[index] = dash[index].value<float>();
+		}
+	}
+
+	Stroke *stroke = _graphics2D->createStroke(width, cap, join, miterLimit, dashValues, dashCount, dashPhase);
+    ImageTexture* createImageTexture(ImageData* image, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin);
+	_strokeID++;
+	_strokeIDMap.insert(_strokeID, stroke);
+*/
+	return _strokeID;
 }
 
 // Concatenates the current Graphics2D Transform with a rotation transform.
@@ -198,19 +236,19 @@ const bb::cascades::Color Canvas::getColor()
 // Gets the current font.
 const int Canvas::getFont()
 {
-
+	return _fontIDMap.key((Font*)_graphics2D->getFont());
 }
 
 // Gets the current gradient.
 const int Canvas::getGradient()
 {
-
+	return _gradientIDMap.key((Gradient*)_graphics2D->getGradient());
 }
 
 // Gets the current image texture.
 const int Canvas::getImageTexture()
 {
-
+	return _imageTextureIDMap.key((ImageTexture*)_graphics2D->getImageTexture());
 }
 
 // Returns the current Stroke in the Graphics context.
@@ -244,19 +282,19 @@ void Canvas::setColor(const bb::cascades::Color& color)
 // Sets this graphics context's font to the specified font.
 void Canvas::setFont(int fontID)
 {
-
+	_graphics2D->setFont(_fontIDMap.value(fontID));
 }
 
 // Sets the gradient for the Graphics2D context.
 void Canvas::setGradient(int gradientID)
 {
-
+	_graphics2D->setGradient(_gradientIDMap.value(gradientID));
 }
 
 // Sets the image texture for the Graphics2D context.
 void Canvas::setImageTexture(int imageTextureID)
 {
-
+	_graphics2D->setImageTexture(_imageTextureIDMap.value(imageTextureID));
 }
 
 // Sets the Stroke for the Graphics2D context.
@@ -322,13 +360,47 @@ void Canvas::drawOval(double x, double y, double width, double height)
 // Draws a closed polygon defined by arrays of x and y coordinates.
 void Canvas::drawPolygon(QVariantList xPoints, QVariantList yPoints, int nPoints)
 {
+	double *xPointsValues = NULL;
+	double *yPointsValues = NULL;
 
+	if (xPoints.size() > 0 && xPoints.size() == nPoints) {
+		xPointsValues = new double[nPoints];
+		for(int index = 0; index < nPoints; index++) {
+			xPointsValues[index] = xPoints[index].value<double>();
+		}
+
+		if (yPoints.size() > 0 && yPoints.size() == nPoints) {
+			yPointsValues = new double[nPoints];
+			for(int index = 0; index < nPoints; index++) {
+				yPointsValues[index] = yPoints[index].value<double>();
+			}
+
+			_graphics2D->drawPolygon(xPointsValues, yPointsValues, nPoints);
+		}
+	}
 }
 
 // Draws a sequence of connected lines defined by arrays of x and y coordinates.
 void Canvas::drawPolyline(QVariantList xPoints, QVariantList yPoints, int nPoints)
 {
+	double *xPointsValues = NULL;
+	double *yPointsValues = NULL;
 
+	if (xPoints.size() > 0 && xPoints.size() == nPoints) {
+		xPointsValues = new double[nPoints];
+		for(int index = 0; index < nPoints; index++) {
+			xPointsValues[index] = xPoints[index].value<double>();
+		}
+
+		if (yPoints.size() > 0 && yPoints.size() == nPoints) {
+			yPointsValues = new double[nPoints];
+			for(int index = 0; index < nPoints; index++) {
+				yPointsValues[index] = yPoints[index].value<double>();
+			}
+
+			_graphics2D->drawPolyline(xPointsValues, yPointsValues, nPoints);
+		}
+	}
 }
 
 // Draws the outline of the specified rectangle.
@@ -376,7 +448,24 @@ void Canvas::fillRect(double x, double y, double width, double height)
 // Fills a closed polygon defined by arrays of x and y coordinates.
 void Canvas::fillPolygon(QVariantList xPoints, QVariantList yPoints, int nPoints)
 {
+	double *xPointsValues = NULL;
+	double *yPointsValues = NULL;
 
+	if (xPoints.size() > 0 && xPoints.size() == nPoints) {
+		xPointsValues = new double[nPoints];
+		for(int index = 0; index < nPoints; index++) {
+			xPointsValues[index] = xPoints[index].value<double>();
+		}
+
+		if (yPoints.size() > 0 && yPoints.size() == nPoints) {
+			yPointsValues = new double[nPoints];
+			for(int index = 0; index < nPoints; index++) {
+				yPointsValues[index] = yPoints[index].value<double>();
+			}
+
+			_graphics2D->fillPolygon(xPointsValues, yPointsValues, nPoints);
+		}
+	}
 }
 
 // Fills the specified rounded corner rectangle with the current color.

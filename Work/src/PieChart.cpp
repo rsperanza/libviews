@@ -183,7 +183,8 @@ void PieChart::onRegenerated()
 
 		_graphics2D->setStroke(_defaultStroke);
 		_graphics2D->drawOval(_width / 2.0, _height / 2.0 + 100.0, _width *.375, _width *.375);
-
+		/*
+*/
 
 		// Legend
 
