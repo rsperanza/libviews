@@ -36,6 +36,9 @@ public Q_SLOTS:
 	void onThumbnail();
 	void onAboutToQuit();
 
+	QString getAbsoluteDataFilename(QString filename);
+	QString getFileURL(QString filename);
+
 #ifdef BBNDK_VERSION_AT_LEAST(10,2,0)
 	void miracastShowOn();
 	void miracastPlayOn();

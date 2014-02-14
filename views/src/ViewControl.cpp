@@ -30,6 +30,18 @@ ViewControl::ViewControl(Container * parent) : ForeignWindowControl(parent)
     // This is only available in Debug builds.
     Q_ASSERT(connectResult);
 
+    Q_UNUSED(connectResult);
+	connectResult = connect(this, SIGNAL(enabledChanged(bool)), this, SLOT(onEnabledChanged(bool)));
+
+    // This is only available in Debug builds.
+    Q_ASSERT(connectResult);
+
+    Q_UNUSED(connectResult);
+	connectResult = connect(this, SIGNAL(visibleChanged(bool)), this, SLOT(onVisibleChanged(bool)));
+
+    // This is only available in Debug builds.
+    Q_ASSERT(connectResult);
+
 	Q_UNUSED(connectResult);
 	connectResult = connect(this, SIGNAL(touch(bb::cascades::TouchEvent *)),
 					 		this,   SLOT(onTouch(bb::cascades::TouchEvent *)) );
@@ -44,6 +56,50 @@ ViewControl::ViewControl(Container * parent) : ForeignWindowControl(parent)
 
 ViewControl::~ViewControl() {
 	// TODO Auto-generated destructor stub
+
+	// clear lists
+	_viewsMutex.lock();
+
+	_viewsToResize.clear();
+	_touchEventViews.clear();
+
+	_viewsMutex.unlock();
+
+	// attached objects should be cleaned up automatically so no extra logic needed
+}
+
+void ViewControl::onEnabledChanged(bool enabled)
+{
+	qDebug()  << "ViewControl::onEnabledChanged" << enabled;
+
+	_viewsMutex.lock();
+
+	for(int index = 0; index < children().size(); index++) {
+		View* view = (View*)children()[index];
+
+		if (view) {
+			view->setEnabled(enabled);
+		}
+	}
+
+	_viewsMutex.unlock();
+}
+
+void ViewControl::onVisibleChanged(bool visible)
+{
+	qDebug()  << "ViewControl::onVisibleChanged" << visible;
+
+	_viewsMutex.lock();
+
+	for(int index = 0; index < children().size(); index++) {
+		View* view = (View*)children()[index];
+
+		if (view) {
+			view->setEnabled(visible);
+		}
+	}
+
+	_viewsMutex.unlock();
 }
 
 void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
@@ -51,18 +107,20 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 
 	qDebug() << "ViewControl size: " << controlFrame.x() << "," << controlFrame.y() << " " << controlFrame.width() << "x" << controlFrame.height() << "\n";
 
+	_viewsMutex.lock();
+
 	if (!_childrenAdded) {
 		for(int index = 0; index < children().size(); index++) {
 			View* view = (View*)children()[index];
 
-			if (viewsToResize.indexOf(view) < 0) {
+			if (_viewsToResize.indexOf(view) < 0 && view->display() == DISPLAY_DEVICE) {
 				addViewToResize(view);
 			}
-			if (touchEventViews.indexOf(view) < 0) {
+			if (_touchEventViews.indexOf(view) < 0) {
 				addTouchEventView(view);
 			}
 
-			if (view->z() > 0 && view->width() > 0 && view->height() > 0) {
+			if (view->z() > 0 && view->width() > 0 && view->height() > 0 && view->display() == DISPLAY_DEVICE) {
 				if (view->enabled() == false) {
 					view->setWindowGroup(windowGroup());
 				}
@@ -76,7 +134,21 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 				view->setStale(true);
 				view->add();
 
-				qDebug() << "ViewControl other view add: " << view << "\n";
+				qDebug() << "ViewControl other device display view add: " << view << "\n";
+			}
+
+			if (view->z() >= 0 && view->display() == DISPLAY_HDMI) {
+				if (view->windowID().size() == 0) {
+					_childID++;
+					view->setWindowID(windowId().append(QString("-child")).append(QString::number(_childID)));
+				}
+
+				view->setEnabled(true);
+				view->setAltered(true);
+				view->setStale(true);
+				view->add();
+
+				qDebug() << "ViewControl HDMI view add: " << view << "\n";
 			}
 		}
 
@@ -86,9 +158,9 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 	}
 
 	if (controlFrame.width() > 0 && controlFrame.height() > 0) {
-		for(int index = 0; index < viewsToResize.size(); index++) {
-			View* view = viewsToResize[index];
-			if (view->enabled() == false) {
+		for(int index = 0; index < _viewsToResize.size(); index++) {
+			View* view = _viewsToResize[index];
+			if (view->enabled() == false && view->display() == DISPLAY_DEVICE) {
 				view->setWindowGroup(windowGroup());
 			}
 			if (view->windowID().size() == 0) {
@@ -101,8 +173,10 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 				addView = true;
 			}
 
-			view->setPosition(controlFrame.x(), controlFrame.y());
-			view->setSize(controlFrame.width(), controlFrame.height());
+			if (view->display() == DISPLAY_DEVICE) {
+				view->setPosition(controlFrame.x(), controlFrame.y());
+				view->setSize(controlFrame.width(), controlFrame.height());
+			}
 			view->setEnabled(true);
 			view->setAltered(true);
 			view->setStale(true);
@@ -114,13 +188,15 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 			}
 		}
 	}
+
+	_viewsMutex.unlock();
 }
 
 void ViewControl::addViewToResize(View* view)
 {
 	if (view) {
 		if (view->width() == 0 && view->height() == 0) {
-			viewsToResize << view;
+			_viewsToResize << view;
 
 			qDebug() << "ViewControl add view to resize: " << view << "\n";
 		}
@@ -130,28 +206,30 @@ void ViewControl::addViewToResize(View* view)
 void ViewControl::addTouchEventView(View* view)
 {
 	if (view) {
-		if (view->z() < 0) {
-			touchEventViews << view;
+		if (view->z() < 0 || view->display() == DISPLAY_HDMI) {
+			_touchEventViews << view;
 
 			qDebug() << "ViewControl add touch event view: " << view << "\n";
 
 	    	bool connectResult;
 
-			// register view slot with internal touch handler generated signal
-			Q_UNUSED(connectResult);
-			connectResult = connect(this, SIGNAL(viewMultitouch(MultitouchEvent *)),
-							 		view,   SLOT(onMultitouch(MultitouchEvent *)) );
+			if (view->display() != DISPLAY_HDMI) {
+				// register view slot with internal touch handler generated signal
+				Q_UNUSED(connectResult);
+				connectResult = connect(this, SIGNAL(viewMultitouch(MultitouchEvent *)),
+										view,   SLOT(onMultitouch(MultitouchEvent *)) );
 
-			// This is only available in Debug builds.
-			//Q_ASSERT(connectResult);
+				// This is only available in Debug builds.
+				//Q_ASSERT(connectResult);
 
-			// register view signal with internal relay handler for external signal
-			Q_UNUSED(connectResult);
-			connectResult = connect(view, SIGNAL(multitouch(MultitouchEvent *)),
-							 		this,   SLOT(onMultitouch(MultitouchEvent *)) );
+				// register view signal with internal relay handler for external signal
+				Q_UNUSED(connectResult);
+				connectResult = connect(view, SIGNAL(multitouch(MultitouchEvent *)),
+										this,   SLOT(onMultitouch(MultitouchEvent *)) );
 
-			// This is only available in Debug builds.
-			Q_ASSERT(connectResult);
+				// This is only available in Debug builds.
+				Q_ASSERT(connectResult);
+				}
 
 			// register view signal with internal relay handler for external signal
 			Q_UNUSED(connectResult);
@@ -201,15 +279,15 @@ void ViewControl::onTouch(bb::cascades::TouchEvent *event) {
 	int touchID = 100;  // dummy value for Cascades touch events routed through the multitouch handling in Views
 	int touchPressure = 100; // Cascades would only send out the signal if the touch pressure was hight
 
-	for(int index = 0; index < touchEventViews.size(); index++) {
+	for(int index = 0; index < _touchEventViews.size(); index++) {
 		if (event->isDown()) {
-			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_TOUCH, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, touchEventViews[index]));
+			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_TOUCH, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, _touchEventViews[index]));
 		}
 		if (event->isUp()) {
-			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_RELEASE, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, touchEventViews[index]));
+			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_RELEASE, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, _touchEventViews[index]));
 		}
 		if (event->isMove()) {
-			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_MOVE, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, touchEventViews[index]));
+			emit viewMultitouch(new MultitouchEvent(SCREEN_EVENT_MTOUCH_MOVE, event->screenX(), event->screenY(), event->localX(), event->localY(), touchID, touchPressure, _touchEventViews[index]));
 		}
 	}
 }

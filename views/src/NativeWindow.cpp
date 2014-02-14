@@ -96,7 +96,7 @@ int NativeWindow::initialize(bool _createFullWindow)
 		int displayID;
 
         returnCode = screen_get_display_property_iv(_screenDisplays[index], SCREEN_PROPERTY_ID,  (int *)&displayID);
-    	qDebug()  << "NativeWindow::initialize: display: " << ":" << index << ":" << displayID << ":" << _display;
+    	qDebug()  << "NativeWindow::initialize: display: " << ":" << index << ":" << displayID << ":" << _display << ":" << _screenDisplays[index];
 
     	if (returnCode) {
     		perror("display ID");

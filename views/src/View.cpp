@@ -56,6 +56,11 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 }
 
 View::~View() {
+	if (_nativeWindow) {
+		delete _nativeWindow;
+		_nativeWindow = NULL;
+		_screenWindow = NULL;
+	}
 }
 
 int View::initialize()
@@ -456,6 +461,9 @@ void View::renderView()
 
 		//qDebug()  << "View::renderView: " << _renderCount << initialized() << " : " << enabled() << " : " << visible() << " : " << stale();
 	} else {
+		if (!visible()) {
+			_renderGraphics->clear();
+		}
 		// reset render count
 		_renderCount = 0;
 	}

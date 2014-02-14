@@ -19,6 +19,7 @@
 
 #include "ViewControl.hpp"
 #include "../graphics/Graphics2D.hpp"
+#include "../graphics/CanvasView.hpp"
 #include <bb/cascades/Color>
 
 using namespace bb::cascades;
@@ -26,12 +27,9 @@ using namespace bb::cascades;
 namespace views {
 	namespace cascades {
 
-class Canvas: public ViewControl {
+class Canvas : public ViewControl {
 
     Q_OBJECT
-
-	//Q_PROPERTY(bool enabled READ enabled WRITE setEnabled)
-	//Q_PROPERTY(bool visible READ visible WRITE setVisible)
 
 public:
     Canvas(Container * parent = 0);
@@ -54,7 +52,7 @@ public:
         int createGradient(int segments, QVariantList colors, QVariantList percentages, float radius = 0.0, float angle = 0.0, float originU = 0.0, float originV = 0.0);
 
     	// create a new image texture
-        int createImageTexture(ImageData* image, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin);
+        int createImageTexture(int imageID, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin);
 
     	// Concatenates the current Graphics2D Transform with a rotation transform.
     	void 	rotate(double theta);
@@ -117,22 +115,22 @@ public:
     	void drawArc(double x, double y, double width, double height, double startAngle, double arcAngle);
 
     	// Draws as much of the specified image as is currently available.
-    	void drawImage(ImageData* image, double x, double y);
+    	void drawImage(int imageID, double x, double y);
 
     	// Draws as much of the specified image as is currently available.
-    	void drawImage(ImageData* image, double x, double y, bb::cascades::Color backgroundColor);
+    	void drawImage(int imageID, double x, double y, bb::cascades::Color backgroundColor);
 
     	// Draws as much of the specified image as has already been scaled to fit inside the specified rectangle.
-    	void drawImage(ImageData* image, double x, double y, double width, double height);
+    	void drawImage(int imageID, double x, double y, double width, double height);
 
     	// Draws as much of the specified image as has already been scaled to fit inside the specified rectangle.
-    	void drawImage(ImageData* image, double x, double y, double width, double height, bb::cascades::Color backgroundColor);
+    	void drawImage(int imageID, double x, double y, double width, double height, bb::cascades::Color backgroundColor);
 
     	// Draws as much of the specified area of the specified image as is currently available, scaling it on the fly to fit inside the specified area of the destination drawable surface.
-    	void drawImage(ImageData* image, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2);
+    	void drawImage(int imageID, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2);
 
     	// Draws as much of the specified area of the specified image as is currently available, scaling it on the fly to fit inside the specified area of the destination drawable surface.
-    	void drawImage(ImageData* image, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2, bb::cascades::Color backgroundColor);
+    	void drawImage(int imageID, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2, bb::cascades::Color backgroundColor);
 
     	// Draws a line, using the current color, between the points (x1, y1) and (x2, y2) in this graphics context's coordinate system.
     	void drawLine(double x1, double y1, double x2, double y2);
@@ -182,24 +180,10 @@ private slots:
 	void onUpdated();
 
 protected:
-	int _fontID;
-	QMap<int,Font*> _fontIDMap;
-	int _gradientID;
-	QMap<int,Gradient*> _gradientIDMap;
-	int _imageTextureID;
-	QMap<int,ImageTexture*> _imageTextureIDMap;
-	int _strokeID;
-	QMap<int,Stroke*> _strokeIDMap;
-
-	GLColor _tempColor;
-
-	Graphics2D* _graphics2D;
-
-	View *_view;
+	CanvasView *_canvasView;
 };
 
-	} /* end namespace cascades */
-
+	} /* end namespace graphics */
 } /* end namespace views */
 
 #endif /* CANVAS_HPP_ */

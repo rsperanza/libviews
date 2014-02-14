@@ -4,6 +4,7 @@ BASEDIR =  $$quote($$_PRO_FILE_PWD_)
 device {
     CONFIG(debug, debug|release) {
         SOURCES +=  $$quote($$BASEDIR/src/Canvas.cpp) \
+                 $$quote($$BASEDIR/src/CanvasView.cpp) \
                  $$quote($$BASEDIR/src/GamepadEvent.cpp) \
                  $$quote($$BASEDIR/src/Graphics.cpp) \
                  $$quote($$BASEDIR/src/Graphics2D.cpp) \
@@ -26,6 +27,7 @@ device {
                  $$quote($$BASEDIR/include/views/event/KeyEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MouseEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MultitouchEvent.hpp) \
+                 $$quote($$BASEDIR/include/views/graphics/CanvasView.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics2D.hpp) \
                  $$quote($$BASEDIR/include/views/media/PhotoView.hpp) \
@@ -36,6 +38,7 @@ device {
 
     CONFIG(release, debug|release) {
         SOURCES +=  $$quote($$BASEDIR/src/Canvas.cpp) \
+                 $$quote($$BASEDIR/src/CanvasView.cpp) \
                  $$quote($$BASEDIR/src/GamepadEvent.cpp) \
                  $$quote($$BASEDIR/src/Graphics.cpp) \
                  $$quote($$BASEDIR/src/Graphics2D.cpp) \
@@ -58,6 +61,7 @@ device {
                  $$quote($$BASEDIR/include/views/event/KeyEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MouseEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MultitouchEvent.hpp) \
+                 $$quote($$BASEDIR/include/views/graphics/CanvasView.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics2D.hpp) \
                  $$quote($$BASEDIR/include/views/media/PhotoView.hpp) \
@@ -70,6 +74,7 @@ device {
 simulator {
     CONFIG(debug, debug|release) {
         SOURCES +=  $$quote($$BASEDIR/src/Canvas.cpp) \
+                 $$quote($$BASEDIR/src/CanvasView.cpp) \
                  $$quote($$BASEDIR/src/GamepadEvent.cpp) \
                  $$quote($$BASEDIR/src/Graphics.cpp) \
                  $$quote($$BASEDIR/src/Graphics2D.cpp) \
@@ -92,6 +97,7 @@ simulator {
                  $$quote($$BASEDIR/include/views/event/KeyEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MouseEvent.hpp) \
                  $$quote($$BASEDIR/include/views/event/MultitouchEvent.hpp) \
+                 $$quote($$BASEDIR/include/views/graphics/CanvasView.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics.hpp) \
                  $$quote($$BASEDIR/include/views/graphics/Graphics2D.hpp) \
                  $$quote($$BASEDIR/include/views/media/PhotoView.hpp) \

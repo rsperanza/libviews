@@ -147,7 +147,7 @@ int ViewsThread::initBPS() {
 }
 
 void ViewsThread::update() {
-	//qDebug()  << "ViewsThread::cleanup";
+	//qDebug()  << "ViewsThread::update";
 	int index;
 	int viewCount = 0;
 	int returnCode = 0;
@@ -169,12 +169,32 @@ void ViewsThread::update() {
 			//qDebug()  << "ViewsThread::update: check attached: " << attached << ":" << index << ":" << _views.at(index)->display();
 			if (_views.at(index)->display() == DISPLAY_HDMI) {
 				if (attached) {
-					_views.at(index)->setVisible(true);
+					if (_views.at(index)->enabled()) {
+						if (!_views.at(index)->visible()) {
+							_views.at(index)->setVisible(true);
+							_views.at(index)->setStale(true);
+						}
+					} else {
+						if (_views.at(index)->visible()) {
+							_views.at(index)->setVisible(false);
+						}
+					}
 				} else {
-					_views.at(index)->setVisible(false);
+					if (_views.at(index)->visible()) {
+						_views.at(index)->setVisible(false);
+					}
 				}
 			} else {
-				_views.at(index)->setVisible(true);
+				if (_views.at(index)->enabled()) {
+					if (!_views.at(index)->visible()) {
+						_views.at(index)->setVisible(true);
+						_views.at(index)->setStale(true);
+					}
+				} else {
+					if (_views.at(index)->visible()) {
+						_views.at(index)->setVisible(false);
+					}
+				}
 			}
 			//qDebug()  << "ViewsThread::update: check attached: " << attached << ":" << index << ":" << _views.at(index)->display() << ":" << _views.at(index)->visible();
 		}
@@ -266,12 +286,32 @@ void ViewsThread::render() {
 		for(index = 0; index < _views.size(); index++) {
 			if (_views.at(index)->display() == DISPLAY_HDMI) {
 				if (attached) {
-					_views.at(index)->setVisible(true);
+					if (_views.at(index)->enabled()) {
+						if (!_views.at(index)->visible()) {
+							_views.at(index)->setVisible(true);
+							_views.at(index)->setStale(true);
+						}
+					} else {
+						if (_views.at(index)->visible()) {
+							_views.at(index)->setVisible(false);
+						}
+					}
 				} else {
-					_views.at(index)->setVisible(false);
+					if (_views.at(index)->visible()) {
+						_views.at(index)->setVisible(false);
+					}
 				}
 			} else {
-				_views.at(index)->setVisible(true);
+				if (_views.at(index)->enabled()) {
+					if (!_views.at(index)->visible()) {
+						_views.at(index)->setVisible(true);
+						_views.at(index)->setStale(true);
+					}
+				} else {
+					if (_views.at(index)->visible()) {
+						_views.at(index)->setVisible(false);
+					}
+				}
 			}
 		}
 

@@ -183,9 +183,9 @@ void VideoView::mmrCleanup()
     _mmrConnection = 0;
 }
 
-void VideoView::onAltered()
+void VideoView::onRegenerated()
 {
-	qDebug()  << "VideoView::onAltered";
+	qDebug()  << "VideoView::onRegenerated";
 
 	if (!_mmrContext && _mediaURL.toString(QUrl::None).size() > 0) {
 		mmrInitialize();

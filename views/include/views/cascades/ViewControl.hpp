@@ -34,9 +34,6 @@ class ViewControl: public ForeignWindowControl {
 
     Q_OBJECT
 
-	//Q_PROPERTY(bool enabled READ enabled WRITE setEnabled)
-	//Q_PROPERTY(bool visible READ visible WRITE setVisible)
-
 public:
     ViewControl(Container * parent = 0);
     virtual ~ViewControl();
@@ -52,6 +49,9 @@ Q_SIGNALS:
 	void viewMultitouch(MultitouchEvent *event);
 
 private slots:
+	void onEnabledChanged(bool enabled);
+	void onVisibleChanged(bool visible);
+
 	void onTouch(bb::cascades::TouchEvent *event);
 	void onControlFrameChanged(const QRectF &controlFrame);
 	void onMultitouch(MultitouchEvent *event);
@@ -65,8 +65,12 @@ protected:
 
 	bool _childrenAdded;
 	int _childID;
-    QList<View*> viewsToResize;
-    QList<View*> touchEventViews;
+
+
+	// main mutex for controlling view access
+	QMutex _viewsMutex;
+    QList<View*> _viewsToResize;
+    QList<View*> _touchEventViews;
 };
 
 	} /* end namespace cascades */

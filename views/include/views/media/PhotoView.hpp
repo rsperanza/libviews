@@ -61,11 +61,10 @@ public Q_SLOTS:
 	int generateThumbnail(const QString& filename, const QString& thumbFilename);
 
 public:
-	// overriden methods from OpenGLView
 	void cleanup();
 	void update();
 
-	void onAltered();
+	void onRegenerated();
 	void onVisible();
 
 private:

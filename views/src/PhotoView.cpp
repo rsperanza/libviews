@@ -67,9 +67,9 @@ void PhotoView::update()
 	}
 }
 
-void PhotoView::onAltered()
+void PhotoView::onRegenerated()
 {
-	qDebug()  << "PhotoView::onAltered";
+	qDebug()  << "PhotoView::onRegenerated";
 
 	if (_photoImage) {
 		if (_graphics2D->reset()) {
@@ -111,7 +111,8 @@ void PhotoView::setPhotoFilename(QString photoFilename) {
 
 	_viewMutex.unlock();
 
-	onAltered();
+	//onRegenerated();
+	setAltered(true);
 
 	setStale(true);
 }

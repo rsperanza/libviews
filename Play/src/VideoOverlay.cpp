@@ -50,9 +50,9 @@ void VideoOverlay::update()
 
 void VideoOverlay::onRegenerated()
 {
-	qDebug()  << "VideoOverlay::onAltered";
+	qDebug()  << "VideoOverlay::onRegenerated";
 
-	VideoView::onAltered();
+	VideoView::onRegenerated();
 
 	if (_screenVideoWindow) {
 		if (_graphics2D->reset()) {

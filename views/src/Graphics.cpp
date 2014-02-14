@@ -327,6 +327,21 @@ void Graphics::unlockRendering()
 	_renderMutex.unlock();
 }
 
+void Graphics::clear()
+{
+	lockRendering();
+
+	getGLContext();
+
+	// make the view transparent
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	swapBuffers();
+
+	unlockRendering();
+}
+
 void Graphics::renderSafe(bool saveRender)
 {
 	if (saveRender) {

@@ -60,6 +60,7 @@ public:
 	virtual int initialize(screen_window_t screenWindow);
 
 	virtual void render() = 0;
+	virtual void clear();
 	virtual void renderSafe(bool saveRender);
 
 	void setSize(int width, int height);

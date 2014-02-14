@@ -2498,7 +2498,7 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 {
 	//qDebug()  << "Graphics2D::renderDrawPolyline: " << commandCount;
 
-	GLfloat dx, dy, length, lineLength, x1, y1, x2, y2, xl1, yl1, xl2, yl2;
+	GLfloat dx, dy, dx1, dy1, length, lineLength, x1, y1, x2, y2, xl1, yl1, xl2, yl2;
 
 	int numberPoints = _drawInts[_drawIntIndices[commandCount*2+0]+0];
 
@@ -2649,36 +2649,71 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 	}
 
 	int renderIndex = 0;
-	for(int index = 0; index < dashPoints; index += 2) {
+	double xPoints[4], yPoints[4];
+	for(int index = 0; index < dashPoints-1; index += 2) {
 		dx = ((GLfloat)dashCoords[index*2+2] - (GLfloat)dashCoords[index*2+0]);
 		dy = ((GLfloat)dashCoords[index*2+3] - (GLfloat)dashCoords[index*2+1]);
 		lineLength = sqrt (fabs(dx * dx) + fabs(dy * dy));
 		dx /= lineLength;
 		dy /= lineLength;
 
+		xPoints[0] = dashCoords[index*2+0] - (dy * _renderStroke->width / 2.0);
+		yPoints[0] = dashCoords[index*2+1] + (dx * _renderStroke->width / 2.0);
+		xPoints[1] = dashCoords[index*2+2] + (dy * _renderStroke->width / 2.0);
+		yPoints[1] = dashCoords[index*2+3] - (dx * _renderStroke->width / 2.0);
+		xPoints[2] = dashCoords[index*2+0] + (dy * _renderStroke->width / 2.0);
+		yPoints[2] = dashCoords[index*2+1] - (dx * _renderStroke->width / 2.0);
+		xPoints[3] = dashCoords[index*2+2] - (dy * _renderStroke->width / 2.0);
+		yPoints[3] = dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
+
+		if (index > 0 && index < (dashPoints-2)) {
+
+			//qDebug()  << "Graphics2D::renderDrawPolyline: before: " << xPoints[1] << " " << yPoints[1]  << " " << xPoints[3]  << " " << xPoints[3];
+
+			if (dashCoords[index*2+4] == dashCoords[index*2+2] && dashCoords[index*2+5] == dashCoords[index*2+3]) {
+
+				//qDebug()  << "Graphics2D::renderDrawPolyline: before: " << xPoints[1] << " " << yPoints[1]  << " " << xPoints[3]  << " " << xPoints[3];
+
+				dx1 = ((GLfloat)dashCoords[index*2+6] - (GLfloat)dashCoords[index*2+4]);
+				dy1 = ((GLfloat)dashCoords[index*2+7] - (GLfloat)dashCoords[index*2+5]);
+				lineLength = sqrt (fabs(dx1 * dx1) + fabs(dy1 * dy1));
+				dx1 /= lineLength;
+				dy1 /= lineLength;
+
+				xPoints[1] = dashCoords[index*2+2] + (dy * _renderStroke->width / 4.0) + (dy1 * _renderStroke->width / 4.0);
+				yPoints[1] = dashCoords[index*2+3] - (dx * _renderStroke->width / 4.0) - (dx1 * _renderStroke->width / 4.0);
+				xPoints[3] = dashCoords[index*2+2] - (dy * _renderStroke->width / 4.0) - (dy1 * _renderStroke->width / 4.0);
+				yPoints[3] = dashCoords[index*2+3] + (dx * _renderStroke->width / 4.0) + (dx1 * _renderStroke->width / 4.0);
+
+				//qDebug()  << "Graphics2D::renderDrawPolyline: after: " << xPoints[1] << " " << yPoints[1]  << " " << xPoints[3]  << " " << xPoints[3];
+			}
+		}
+
+
 		if (fabs(dy) > fabs(dx)) {
-			_renderVertexCoords[index*4+0] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+1] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+2] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+3] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+4] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+5] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+6] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+7] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / 2.0);
+			_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[3];
+			_renderVertexCoords[renderIndex*8+1] = (GLfloat)yPoints[3];
+			_renderVertexCoords[renderIndex*8+2] = (GLfloat)xPoints[0];
+			_renderVertexCoords[renderIndex*8+3] = (GLfloat)yPoints[0];
+			_renderVertexCoords[renderIndex*8+4] = (GLfloat)xPoints[1];
+			_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[1];
+			_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[2];
+			_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[2];
 		} else {
-			_renderVertexCoords[index*4+0] = (GLfloat)dashCoords[index*2+0] + (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+1] = (GLfloat)dashCoords[index*2+1] - (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+2] = (GLfloat)dashCoords[index*2+2] + (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+3] = (GLfloat)dashCoords[index*2+3] - (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+4] = (GLfloat)dashCoords[index*2+0] - (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+5] = (GLfloat)dashCoords[index*2+1] + (dx * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+6] = (GLfloat)dashCoords[index*2+2] - (dy * _renderStroke->width / 2.0);
-			_renderVertexCoords[index*4+7] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
+			_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[2];
+			_renderVertexCoords[renderIndex*8+1] = (GLfloat)yPoints[2];
+			_renderVertexCoords[renderIndex*8+2] = (GLfloat)xPoints[1];
+			_renderVertexCoords[renderIndex*8+3] = (GLfloat)yPoints[1];
+			_renderVertexCoords[renderIndex*8+4] = (GLfloat)xPoints[0];
+			_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[0];
+			_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[3];
+			_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[3];
 		}
 
 		renderIndex++;
+		//qDebug()  << "Graphics2D::renderDrawPolyline: " << numberPoints << " " << index  << " " << renderIndex  << " " << (renderIndex*8 + 8)   << " " << MAX_VERTEX_COORDINATES;
 
-		if ((renderIndex*4 + 8) > MAX_VERTEX_COORDINATES) {
+		if ((renderIndex*8 + 8) > MAX_VERTEX_COORDINATES) {
 			renderDrawTriangles(renderIndex, 4);
 
 			renderIndex = 0;
@@ -2791,11 +2826,11 @@ void Graphics2D::renderDrawTriangles(int renderCount, int renderPoints)
 // Render a line, using the current color, between the points (x1, y1) and (x2, y2) in this graphics context's coordinate system.
 void Graphics2D::renderDrawFillArc(int commandCount)
 {
-	//qDebug()  << "Graphics2D::renderDrawArc: " << commandCount << " : " << _drawFloatIndices[commandCount*2+0] << " " << _drawFloatIndices[commandCount*2+1] << " " << _drawFloatIndices[commandCount*2+2] << " " << _drawFloatIndices[commandCount*2+3] << " " << _drawFloatIndices[commandCount*2+4] << " " << _drawFloatIndices[commandCount*2+5];
+	//qDebug()  << "Graphics2D::renderDrawFillArc: " << commandCount << " : " << _drawFloatIndices[commandCount*2+0] << " " << _drawFloatIndices[commandCount*2+1] << " " << _drawFloatIndices[commandCount*2+2] << " " << _drawFloatIndices[commandCount*2+3] << " " << _drawFloatIndices[commandCount*2+4] << " " << _drawFloatIndices[commandCount*2+5];
 
 	double x, y, width, height, startAngle, arcAngle;
-	double radiusX, radiusY, endAngle, drawAngle, angleStep, temp;
-	GLfloat dx, dy, length;
+	double radiusX, radiusY, endAngle, drawAngle, endAngle1, drawAngle1, angleStep, temp;
+	GLfloat dx, dy, dx1, dy1, dx2, dy2, length, length1;
 
 	bool fillArc = false;
 	if (_master2D->_drawCommands[commandCount] == RENDER_FILL_ARC) {
@@ -2831,7 +2866,7 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 
 	//qDebug()  << "Graphics2D::renderDrawArc: " << startAngle << " " << endAngle << " " << angleStep;
 
-	double drawX, drawY, lastX, lastY, drawU, drawV, lastU, lastV, angle, currentLength, dashLength;
+	double drawX, drawY, drawX1, drawY1, lastX, lastY, drawU, drawV, drawU1, drawV1, lastU, lastV, angle, angle1, currentLength, dashLength;
 	int drawCount = 0;
 
 	currentLength = 0.0;
@@ -2945,6 +2980,8 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 	}
 
 	int renderIndex = 0;
+	double xPoints[4], yPoints[4];
+
 	for(int index = 0; index < dashPoints; index += 2) {
 		drawAngle = dashCoords[index+0];
 		endAngle = dashCoords[index+1];
@@ -2985,10 +3022,17 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 				dx = ((GLfloat)drawX - (GLfloat)lastX);
 				dy = ((GLfloat)drawY - (GLfloat)lastY);
 				length = sqrt (fabs(dx * dx) + fabs(dy * dy));
-				GLfloat dx1 = ((GLfloat)drawX - (GLfloat)x);
-				GLfloat dy1 = ((GLfloat)drawY - (GLfloat)y);
+				dx /= length;
+				dy /= length;
 
 				currentLength += length;
+
+				GLfloat dx1 = ((GLfloat)drawX - (GLfloat)x);
+				GLfloat dy1 = ((GLfloat)drawY - (GLfloat)y);
+				length1 = sqrt (fabs(dx1 * dx1) + fabs(dy1 * dy1));
+				dx1 /= length1;
+				dy1 /= length1;
+
 
 				if (!(fabs(dx) < 1.0 || fabs(dy) < 1.0) || length > 20.0 || drawAngle == endAngle) {
 					if (fillArc) {
@@ -3006,26 +3050,82 @@ void Graphics2D::renderDrawFillArc(int commandCount)
 						_renderTextureCoords[renderIndex*6+4] = (GLfloat)drawU;
 						_renderTextureCoords[renderIndex*6+5] = (GLfloat)drawV;
 					} else {
-						qDebug()  << "Graphics2D::renderDrawArc: renderIndex: " << renderIndex*8 << " " << (renderIndex*8+8);
+						//qDebug()  << "Graphics2D::renderDrawArc: renderIndex: " << renderIndex*8 << " " << (renderIndex*8+8);
+						xPoints[0] = lastX - (dy * _renderStroke->width / 2.0);
+						yPoints[0] = lastY + (dx * _renderStroke->width / 2.0);
+						xPoints[1] = drawX + (dy * _renderStroke->width / 2.0);
+						yPoints[1] = drawY - (dx * _renderStroke->width / 2.0);
+						xPoints[2] = lastX + (dy * _renderStroke->width / 2.0);
+						yPoints[2] = lastY - (dx * _renderStroke->width / 2.0);
+						xPoints[3] = drawX - (dy * _renderStroke->width / 2.0);
+						yPoints[3] = drawY + (dx * _renderStroke->width / 2.0);
+
+						drawAngle1 = drawAngle + angleStep;
+						if (drawAngle1 > endAngle) {
+							drawAngle1 = endAngle;
+						}
+
+						//qDebug()  << "Graphics2D::renderDrawPolyline: before: " << xPoints[1] << " " << yPoints[1]  << " " << xPoints[3]  << " " << xPoints[3];
+
+						angle1 = fmod(drawAngle1, 360.0);
+						if (angle1 < 0) {
+							angle1 += 360.0;
+						}
+
+						if (angle1 >= 0.0 && angle1 <= 180.0) {
+							drawX1 = cos(angle1 * M_PI / 180.0);
+						} else {
+							drawX1 = cos((360.0 - angle1) * M_PI / 180.0);
+						}
+
+						if (angle1 >= 0.0 && angle1 <= 180.0) {
+							drawY1 = sin(angle1 * M_PI / 180.0);
+						} else {
+							drawY1 = -sin((360.0 - angle1) * M_PI / 180.0);
+						}
+
+						drawU1 = drawX1 * 0.5;
+						drawV1 = drawY1 * 0.5;
+						drawU1 += 0.5;
+						drawV1 += 0.5;
+
+						drawX1 *= width;
+						drawY1 *= height;
+						drawX1 += x;
+						drawY1 += y;
+
+						if (drawAngle != endAngle) {
+							dx2 = ((GLfloat)drawX1 - (GLfloat)drawX);
+							dy2 = ((GLfloat)drawY1 - (GLfloat)drawY);
+							length1 = sqrt (fabs(dx2 * dx2) + fabs(dy2 * dy2));
+							dx2 /= length1;
+							dy2 /= length1;
+
+							xPoints[1] = drawX + (dy * _renderStroke->width / 4.0) + (dy2 * _renderStroke->width / 4.0);
+							yPoints[1] = drawY - (dx * _renderStroke->width / 4.0) - (dx2 * _renderStroke->width / 4.0);
+							xPoints[3] = drawX - (dy * _renderStroke->width / 4.0) - (dy2 * _renderStroke->width / 4.0);
+							yPoints[3] = drawY + (dx * _renderStroke->width / 4.0) + (dx2 * _renderStroke->width / 4.0);
+						}
+
 
 						if (fabs(dy) > fabs(dx)) {
-							_renderVertexCoords[renderIndex*8+0] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+1] = (GLfloat)drawY + (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+2] = (GLfloat)lastX - (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+3] = (GLfloat)lastY + (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+4] = (GLfloat)drawX + (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+5] = (GLfloat)drawY - (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+6] = (GLfloat)lastX + (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+7] = (GLfloat)lastY - (dx * _renderStroke->width / (2.0 * length));
+							_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[3];
+							_renderVertexCoords[renderIndex*8+1] = (GLfloat)yPoints[3];
+							_renderVertexCoords[renderIndex*8+2] = (GLfloat)xPoints[0];
+							_renderVertexCoords[renderIndex*8+3] = (GLfloat)yPoints[0];
+							_renderVertexCoords[renderIndex*8+4] = (GLfloat)xPoints[1];
+							_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[1];
+							_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[2];
+							_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[2];
 						} else {
-							_renderVertexCoords[renderIndex*8+0] = (GLfloat)lastX + (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+1] = (GLfloat)lastY - (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+2] = (GLfloat)drawX + (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+3] = (GLfloat)drawY - (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+4] = (GLfloat)lastX - (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+5] = (GLfloat)lastY + (dx * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+6] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
-							_renderVertexCoords[renderIndex*8+7] = (GLfloat)drawY + (dx * _renderStroke->width / (2.0 * length));
+							_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[2];
+							_renderVertexCoords[renderIndex*8+1] = (GLfloat)yPoints[2];
+							_renderVertexCoords[renderIndex*8+2] = (GLfloat)xPoints[1];
+							_renderVertexCoords[renderIndex*8+3] = (GLfloat)yPoints[1];
+							_renderVertexCoords[renderIndex*8+4] = (GLfloat)xPoints[0];
+							_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[0];
+							_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[3];
+							_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[3];
 						}
 					}
 
@@ -4163,33 +4263,33 @@ void Graphics2D::renderFillPolygon(int commandCount)
 			dy /= lineLength;
 
 			if (fabs(dy) > fabs(dx)) {
-				_renderVertexCoords[index*6+0] = (GLfloat)xPoints[index+1];
-				_renderVertexCoords[index*6+1] = (GLfloat)yPoints[index+1];
-				_renderVertexCoords[index*6+2] = (GLfloat)xPoints[index];
-				_renderVertexCoords[index*6+3] = (GLfloat)yPoints[index];
-				_renderVertexCoords[index*6+4] = (GLfloat)x;
-				_renderVertexCoords[index*6+5] = (GLfloat)y;
+				_renderVertexCoords[renderIndex*6+0] = (GLfloat)xPoints[index+1];
+				_renderVertexCoords[renderIndex*6+1] = (GLfloat)yPoints[index+1];
+				_renderVertexCoords[renderIndex*6+2] = (GLfloat)xPoints[index];
+				_renderVertexCoords[renderIndex*6+3] = (GLfloat)yPoints[index];
+				_renderVertexCoords[renderIndex*6+4] = (GLfloat)x;
+				_renderVertexCoords[renderIndex*6+5] = (GLfloat)y;
 
-				_renderTextureCoords[index*6+0] = (GLfloat)uPoints[index+1];
-				_renderTextureCoords[index*6+1] = (GLfloat)vPoints[index+1];
-				_renderTextureCoords[index*6+2] = (GLfloat)uPoints[index];
-				_renderTextureCoords[index*6+3] = (GLfloat)vPoints[index];
-				_renderTextureCoords[index*6+4] = (GLfloat)u;
-				_renderTextureCoords[index*6+5] = (GLfloat)v;
+				_renderTextureCoords[renderIndex*6+0] = (GLfloat)uPoints[index+1];
+				_renderTextureCoords[renderIndex*6+1] = (GLfloat)vPoints[index+1];
+				_renderTextureCoords[renderIndex*6+2] = (GLfloat)uPoints[index];
+				_renderTextureCoords[renderIndex*6+3] = (GLfloat)vPoints[index];
+				_renderTextureCoords[renderIndex*6+4] = (GLfloat)u;
+				_renderTextureCoords[renderIndex*6+5] = (GLfloat)v;
 			} else {
-				_renderVertexCoords[index*6+2] = (GLfloat)xPoints[index];
-				_renderVertexCoords[index*6+3] = (GLfloat)vPoints[index];
-				_renderVertexCoords[index*6+0] = (GLfloat)xPoints[index+1];
-				_renderVertexCoords[index*6+1] = (GLfloat)vPoints[index+1];
-				_renderVertexCoords[index*6+4] = (GLfloat)x;
-				_renderVertexCoords[index*6+5] = (GLfloat)v;
+				_renderVertexCoords[renderIndex*6+2] = (GLfloat)xPoints[index];
+				_renderVertexCoords[renderIndex*6+3] = (GLfloat)vPoints[index];
+				_renderVertexCoords[renderIndex*6+0] = (GLfloat)xPoints[index+1];
+				_renderVertexCoords[renderIndex*6+1] = (GLfloat)vPoints[index+1];
+				_renderVertexCoords[renderIndex*6+4] = (GLfloat)x;
+				_renderVertexCoords[renderIndex*6+5] = (GLfloat)v;
 
-				_renderTextureCoords[index*6+2] = (GLfloat)uPoints[index];
-				_renderTextureCoords[index*6+3] = (GLfloat)vPoints[index];
-				_renderTextureCoords[index*6+0] = (GLfloat)uPoints[index+1];
-				_renderTextureCoords[index*6+1] = (GLfloat)vPoints[index+1];
-				_renderTextureCoords[index*6+4] = (GLfloat)u;
-				_renderTextureCoords[index*6+5] = (GLfloat)v;
+				_renderTextureCoords[renderIndex*6+2] = (GLfloat)uPoints[index];
+				_renderTextureCoords[renderIndex*6+3] = (GLfloat)vPoints[index];
+				_renderTextureCoords[renderIndex*6+0] = (GLfloat)uPoints[index+1];
+				_renderTextureCoords[renderIndex*6+1] = (GLfloat)vPoints[index+1];
+				_renderTextureCoords[renderIndex*6+4] = (GLfloat)u;
+				_renderTextureCoords[renderIndex*6+5] = (GLfloat)v;
 			}
 
 			renderIndex++;

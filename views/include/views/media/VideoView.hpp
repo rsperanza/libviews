@@ -81,7 +81,7 @@ public:
 	void update();
 	void cleanup();
 
-	virtual void onAltered();
+	virtual void onRegenerated();
 	virtual void onVisible();
 
 public Q_SLOTS:

@@ -2,11 +2,12 @@
 
 #include <bb/cascades/Application>
 #include <bb/cascades/ForeignWindowControl>
-#include <bb/cascades/Page>
+#include <bb/cascades/TabbedPane>
 #include <bb/cascades/QmlDocument>
 #include <bb/cascades/Window>
 
 #include "applicationui.hpp"
+#include "SignaturePad.hpp"
 
 using namespace bb::cascades;
 
@@ -16,6 +17,7 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 	// register some new types for QML
     qmlRegisterType < PieChart >      ("com.example.views", 1, 0, "PieChart");
     qmlRegisterType < LineGraph >      ("com.example.views", 1, 0, "LineGraph");
+    qmlRegisterType < SignaturePad >      ("com.example.controls", 1, 0, "SignaturePad");
 
 	_dataPath = QDir::current().absoluteFilePath("data");
 
@@ -28,7 +30,7 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 		qml->setContextProperty("_app", this);
 
 		// create root object for the UI
-		Page *root = qml->createRootObject<Page>();
+		TabbedPane *root = qml->createRootObject<TabbedPane>();
 		if (root) {
 			ViewControl* viewControl = root->findChild<ViewControl*>("workVC");
 
@@ -61,6 +63,22 @@ void ApplicationUI::onAboutToQuit()
 {
 	qDebug()  << "ApplicationUI::onAboutToQuit";
 	Views::shutdown();
+}
+
+QString ApplicationUI::getAbsoluteDataFilename(QString filename)
+{
+	qDebug()  << "ApplicationUI::getAbsoluteDataFilename";
+
+	_dataPath = QDir::current().absoluteFilePath("data");
+	return _dataPath.append("/").append(filename);
+}
+
+QString ApplicationUI::getFileURL(QString filename)
+{
+	qDebug()  << "ApplicationUI::getFileURL";
+
+	_dataPath = QDir::current().absoluteFilePath("data");
+	return QUrl::fromLocalFile(filename).toString();
 }
 
 #ifdef BBNDK_VERSION_AT_LEAST(10,2,0)

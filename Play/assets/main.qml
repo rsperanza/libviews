@@ -27,6 +27,24 @@ Page {
 					topPadding: 50
 					bottomPadding: 50
 					enabled: false
+            	},
+	           	VideoOverlay {
+            		id: videoOverlayHDMI
+            		
+					windowID: "videoOverlayHDMI"
+					windowGroup: "play-HDMI"
+					createFullWindow: true
+					createWindowGroup: true
+					display: 4
+					z: 0
+					x: 0
+					y: 0
+					width: 0
+					height: 0
+					mediaURL: _app.fileURL("app/native/assets/media/VID_00000007.mp4")
+					topPadding: 50
+					bottomPadding: 50
+					enabled: false
             	}
             ]
         }
