@@ -91,6 +91,16 @@ int Canvas::createGradient(int segments, QVariantList colors, QVariantList perce
 	return _canvasView->createGradient(segments, colors, percentages, radius, angle, originU, originV);
 }
 
+int Canvas::loadImage(const QString& filename)
+{
+	return loadImage(filename);
+}
+
+int Canvas::loadFullImage(const QString& filename)
+{
+	return loadFullImage(filename);
+}
+
 // create a new image texture
 int Canvas::createImageTexture(int imageID, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin)
 {

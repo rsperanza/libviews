@@ -3,7 +3,7 @@ APP_NAME = Play
 GLAPI = gles2
 include(../views/views.pri)
 
-CONFIG += qt warn_on cascades10 views
+CONFIG += qt warn_on cascades10 views gles2
 LIBS += -lbbsystem -lscreen -lbb
 QMAKE_CXXFLAGS += -DGLES2
 

@@ -138,24 +138,6 @@ public:
 	void remove();
 
 
-	// display methods
-	void setDisplay(ViewDisplay display);
-
-	// view settings
-	void setDisplay(int display);
-	void setAngle(int angle);
-	void setX(int x);
-	void setY(int y);
-	void setWidth(int width);
-	void setHeight(int height);
-	void setZ(int z);
-	void setTransparency(int transparency);
-
-	void setWindowID(const QString id);
-	void setWindowGroup(const QString &group);
-	void setCreateFullWindow(bool create);
-	void setCreateWindowGroup(bool create);
-
 	void setPosition(int x, int y);
 	void setSize(int width, int height);
 
@@ -183,6 +165,26 @@ public Q_SLOTS:
 	void setStale(bool stale);
 	void setAltered(bool stale);
 	void setCapture(bool capture);
+
+
+	// display methods
+	void setDisplay(ViewDisplay display);
+
+	// view settings
+	void setDisplay(int display);
+	void setAngle(int angle);
+	void setX(int x);
+	void setY(int y);
+	void setWidth(int width);
+	void setHeight(int height);
+	void setZ(int z);
+	void setTransparency(int transparency);
+
+	void setWindowID(const QString id);
+	void setWindowGroup(const QString &group);
+	void setCreateFullWindow(bool create);
+	void setCreateWindowGroup(bool create);
+
 
 	virtual void onRegenerated() {};
 	ImageData* getRenderedImage();

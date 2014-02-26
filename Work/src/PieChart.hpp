@@ -37,6 +37,40 @@ class PieChart : public View {
 
 Q_OBJECT
 
+Q_PROPERTY(qreal leftPadding   READ leftPadding   WRITE setLeftPadding)
+Q_PROPERTY(qreal rightPadding  READ rightPadding  WRITE setRightPadding)
+Q_PROPERTY(qreal topPadding    READ topPadding    WRITE setTopPadding)
+Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding)
+
+Q_PROPERTY(QString caption READ caption WRITE setCaption)
+Q_PROPERTY(QString captionFont READ captionFont WRITE setCaptionFont)
+Q_PROPERTY(qreal  captionFontSize  READ captionFontSize WRITE setCaptionFontSize)
+Q_PROPERTY(QString captionPlacement READ captionPlacement WRITE setCaptionPlacement)
+Q_PROPERTY(QString captionAlignment READ captionAlignment WRITE setCaptionAlignment)
+
+Q_PROPERTY(QString subCaption READ subCaption WRITE setSubCaption)
+Q_PROPERTY(QString subCaptionFont READ subCaptionFont WRITE setSubCaptionFont)
+Q_PROPERTY(qreal  subCaptionFontSize  READ subCaptionFontSize WRITE setSubCaptionFontSize)
+
+Q_PROPERTY(bool showCaption READ showCaption WRITE setShowCaption)
+
+Q_PROPERTY(QString legendTitleFont READ legendTitleFont WRITE setLegendTitleFont)
+Q_PROPERTY(qreal  legendTitleFontSize  READ legendTitleFontSize WRITE setLegendTitleFontSize)
+Q_PROPERTY(QString legendFont READ legendFont WRITE setLegendFont)
+Q_PROPERTY(qreal  legendFontSize  READ legendFontSize WRITE setLegendFontSize)
+Q_PROPERTY(QString legendPlacement READ legendPlacement WRITE setLegendPlacement)
+Q_PROPERTY(bool showLegend READ showLegend WRITE setShowLegend)
+
+Q_PROPERTY(bool showSliceLabel READ showSliceLabel WRITE setShowSliceLabel)
+Q_PROPERTY(QString sliceLabelPlacement READ sliceLabelPlacement WRITE setSliceLabelPlacement)
+Q_PROPERTY(QString sliceLabelFont READ sliceLabelFont WRITE setSliceLabelFont)
+Q_PROPERTY(qreal  sliceLabelFontSize  READ sliceLabelFontSize WRITE setSliceLabelFontSize)
+
+Q_PROPERTY(QVariantList itemColors READ itemColors WRITE setItemColors)
+Q_PROPERTY(QVariantList itemLabels READ itemLabels WRITE setItemLabels)
+Q_PROPERTY(QVariantList itemValues READ itemValues WRITE setItemValues)
+
+
 public:
 	PieChart(ViewDisplay display = DISPLAY_DEVICE);
 
@@ -44,31 +78,145 @@ public:
 
 	void update();
 
+
+	qreal leftPadding();
+	qreal rightPadding();
+	qreal topPadding();
+	qreal bottomPadding();
+
+	QString caption();
+	QString captionFont();
+	qreal  captionFontSize();
+	QString captionPlacement();
+	QString captionAlignment();
+
+	QString subCaption();
+	QString subCaptionFont();
+	qreal  subCaptionFontSize();
+
+	bool showCaption();
+
+	QString legendTitleFont();
+	qreal  legendTitleFontSize();
+	QString legendFont();
+	qreal  legendFontSize();
+	QString legendPlacement();
+	bool showLegend();
+
+	bool showSliceLabel();
+	QString sliceLabelPlacement();
+	QString sliceLabelFont();
+	qreal  sliceLabelFontSize();
+
+	QVariantList itemColors();
+	QVariantList itemLabels();
+	QVariantList itemValues();
+
+
+
 public Q_SLOTS:
 	void onRegenerated();
 	void onVisible();
 
+	void setLeftPadding(qreal leftPadding);
+	void setRightPadding(qreal rightPadding);
+	void setTopPadding(qreal topPadding);
+	void setBottomPadding(qreal bottomPadding);
+
+	void setCaption(QString caption);
+	void setCaptionFont(QString captionFont);
+	void setCaptionFontSize(qreal captionFontSize);
+	void setCaptionPlacement(QString captionPlacement);
+	void setCaptionAlignment(QString captionAlignment);
+
+	void setSubCaption(QString subCaption);
+	void setSubCaptionFont(QString subCaptionFont);
+	void setSubCaptionFontSize(qreal subCaptionFontSize);
+
+	void setShowCaption(bool showCaption);
+
+	void setLegendTitleFont(QString legendTitleFont);
+	void setLegendTitleFontSize(qreal legendTitleFontSize);
+	void setLegendFont(QString legendFont);
+	void setLegendFontSize(qreal  legendFontSize);
+	void setLegendPlacement(QString legendPlacement);
+	void setShowLegend(bool showLegend);
+
+	void setShowSliceLabel(bool showSliceLabel);
+	void setSliceLabelPlacement(QString sliceLabelPlacement);
+	void setSliceLabelFont(QString sliceLabelFont);
+	void setSliceLabelFontSize(qreal  sliceLabelFontSize);
+
+	void setItemColors(QVariantList itemColors);
+	void setItemLabels(QVariantList itemValues);
+	void setItemValues(QVariantList itemValues);
+
+
 private:
+
+
 	Stroke*    _defaultStroke;
 	Stroke*    _thinStroke;
-	ImageData* _testImage;
-	ImageData* _testImage1;
-	Font*      _slatePro;
-	Font*      _slateProSub;
-	Font*      _slateProLight;
+
 	float*     _pieGradientPercentages;
-	GLColor*     _pieGradientRedCrimsonColors;
-	GLColor*     _pieGradientGreenPineColors;
-	GLColor*     _pieGradientBlueSlateColors;
-	GLColor*     _pieGradientYellowOrangeColors;
-	GLColor*     _pieGradientPurpleVioletColors;
-	GLColor*     _pieGradientCyanAcquaColors;
-	Gradient*  _pieGradientRedCrimson;
-	Gradient*  _pieGradientGreenPine;
-	Gradient*  _pieGradientBlueSlate;
-	Gradient*  _pieGradientYellowOrange;
-	Gradient*  _pieGradientPurpleViolet;
-	Gradient*  _pieGradientCyanAcqua;
+
+	double       _leftPadding;
+	double       _rightPadding;
+	double       _topPadding;
+	double       _bottomPadding;
+
+	double       _captionX;
+	double       _captionY;
+	Font*        _captionFont;
+	double       _subCaptionX;
+	double       _subCaptionY;
+	Font*        _subCaptionFont;
+
+	double       _legendTitleX;
+	double       _legendTitleY;
+	double       _legendTopItemX;
+	double       _legendTopItemY;
+	double       _legendItemBoxSize;
+	double       _legendItemHeight;
+
+	double       _pieCenterX;
+	double       _pieCenterY;
+	double       _pieRadius;
+
+	GLColor*      _itemColors;
+	double*		  _itemPercentages;
+	Gradient**    _itemGradients;
+
+	QString      _caption;
+	QString      _captionFontFile;
+	double        _captionFontSize;
+	QString      _captionPlacement;
+	QString      _captionAlignment;
+
+	QString      _subCaption;
+	QString      _subCaptionFontFile;
+	qreal        _subCaptionFontSize;
+
+	bool         _showCaption;
+
+	QString      _legendTitleFontFile;
+	double       _legendTitleFontSize;
+	Font*        _legendTitleFont;
+	QString      _legendFontFile;
+	double       _legendFontSize;
+	Font*        _legendFont;
+	QString      _legendPlacement;
+	bool         _showLegend;
+
+	bool         _showSliceLabel;
+	QString      _sliceLabelPlacement;
+	QString      _sliceLabelFontFile;
+	double       _sliceLabelFontSize;
+	Font*        _sliceLabelFont;
+
+	QVariantList _itemColorsList;
+	QVariantList _itemLabels;
+	QVariantList _itemValuesList;
 
 	Graphics2D* _graphics2D;
 };

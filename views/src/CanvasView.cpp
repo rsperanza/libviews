@@ -119,6 +119,34 @@ int CanvasView::createGradient(int segments, QVariantList colors, QVariantList p
 	return _gradientID;
 }
 
+int CanvasView::loadImage(const QString& filename)
+{
+	ImageData *image = _graphics2D->loadImage(filename);
+
+	if (image) {
+		_imageID++;
+		_imageIDMap.insert(_imageID, image);
+	} else {
+		return -1;
+	}
+
+	return _imageID;
+}
+
+int CanvasView::loadFullImage(const QString& filename)
+{
+	ImageData *image = _graphics2D->loadFullImage(filename);
+
+	if (image) {
+		_imageID++;
+		_imageIDMap.insert(_imageID, image);
+	} else {
+		return -1;
+	}
+
+	return _imageID;
+}
+
 // create a new image texture
 int CanvasView::createImageTexture(int imageID, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin)
 {
@@ -287,37 +315,76 @@ void CanvasView::drawArc(double x, double y, double width, double height, double
 // Draws as much of the specified image as is currently available.
 void CanvasView::drawImage(int imageID, double x, double y)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_graphics2D->drawImage(image, x, y);
+	}
 }
 
 // Draws as much of the specified image as is currently available.
 void CanvasView::drawImage(int imageID,  double x, double y, bb::cascades::Color backgroundColor)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_tempColor.red = backgroundColor.red();
+		_tempColor.green = backgroundColor.green();
+		_tempColor.blue = backgroundColor.blue();
+		_tempColor.alpha = backgroundColor.alpha();
+
+		_graphics2D->drawImage(image, x, y, _tempColor);
+	}
 }
 
 // Draws as much of the specified image as has already been scaled to fit inside the specified rectangle.
 void CanvasView::drawImage(int imageID,  double x, double y, double width, double height)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_graphics2D->drawImage(image, x, y, width, height);
+	}
 }
 
 // Draws as much of the specified image as has already been scaled to fit inside the specified rectangle.
 void CanvasView::drawImage(int imageID,  double x, double y, double width, double height, bb::cascades::Color backgroundColor)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_tempColor.red = backgroundColor.red();
+		_tempColor.green = backgroundColor.green();
+		_tempColor.blue = backgroundColor.blue();
+		_tempColor.alpha = backgroundColor.alpha();
+
+		_graphics2D->drawImage(image, x, y, width, height, _tempColor);
+	}
 }
 
 // Draws as much of the specified area of the specified image as is currently available, scaling it on the fly to fit inside the specified area of the destination drawable surface.
 void CanvasView::drawImage(int imageID, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_graphics2D->drawImage(image, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2);
+	}
 }
 
 // Draws as much of the specified area of the specified image as is currently available, scaling it on the fly to fit inside the specified area of the destination drawable surface.
 void CanvasView::drawImage(int imageID, double dx1, double dy1, double dx2, double dy2, int sx1, int sy1, int sx2, int sy2, bb::cascades::Color backgroundColor)
 {
+	ImageData* image = _imageIDMap.value(imageID);
 
+	if (image) {
+		_tempColor.red = backgroundColor.red();
+		_tempColor.green = backgroundColor.green();
+		_tempColor.blue = backgroundColor.blue();
+		_tempColor.alpha = backgroundColor.alpha();
+
+		_graphics2D->drawImage(image, dx1, dy1, dx2, dy2, sx1, sy1, sx2, sy2, _tempColor);
+	}
 }
 
 // Draws a line, using the current color, between the points (x1, y1) and (x2, y2) in this graphics context's coordinate system.
@@ -393,7 +460,18 @@ void CanvasView::drawRoundRect(double x, double y, double width, double height, 
 // Measures the bounding box of the text of the specified String, using the current font in the Graphics2D context.
 QVariantList* CanvasView::measureString(QString text)
 {
+	QVariantList* measures = new QVariantList();
 
+	double textWidth = 0.0, textHeight = 0.0;
+
+	const Font* font = _graphics2D->getFont();
+	if (font) {
+		_graphics2D->measureString(text, &textWidth, &textHeight);
+
+		*measures << textWidth << textHeight;
+	}
+
+	return measures;
 }
 
 // Renders the text specified by the specified String, using the current text attribute state in the Graphics2D context.

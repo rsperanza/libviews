@@ -105,6 +105,58 @@ TabbedPane {
 									width: 0
 									height: 0
 									enabled: false
+									
+									leftPadding: 10
+									rightPadding: 10
+									topPadding: 10
+									bottomPadding: 10
+									
+									showCaption: true
+									caption: "Sample Pie Chart"
+									captionFont: "/usr/fonts/font_repository/monotype/georgiab.ttf"
+									captionFontSize: 13
+									subCaption: "for today"
+									subCaptionFont: "/usr/fonts/font_repository/monotype/ariali.ttf"
+									subCaptionFontSize: 10
+									captionPlacement: "top"
+									captionAlignment: "center"
+				            			
+				            		showLegend: true
+									legendTitleFont: "/usr/fonts/font_repository/monotype/SlatePro.ttf"
+									legendTitleFontSize: 8
+									legendFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
+									legendFontSize: 8
+				            		legendPlacement: "top"
+				            		
+ 				            		showSliceLabel: true
+									sliceLabelFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
+									sliceLabelFontSize: 8
+				            		sliceLabelPlacement: "vertical"
+				            		
+ 				            		itemLabels: [ "item 1", "item 2", "item 3", "item 4", "item 5", "item 6" ]
+				            		itemValues: [ 0.16666, 0.13888, 0.08333, 0.19444, 0.05555, 0.36144 ]
+				            		itemColors: [ 
+				            				Color.create( 1.0, 0.0, 0.0, 1.0 ), 
+				            				Color.create( 0.75, 0.0, 0.0, 1.0 ), 
+				            				Color.create( 0.0, 1.0, 0.0, 1.0 ), 
+				            				Color.create( 0.0, 0.75, 0.0, 1.0 ), 
+				            				Color.create( 0.0, 0.0, 1.0, 1.0 ), 
+				            				Color.create( 0.0, 0.0, 0.75, 1.0 ), 
+				            				Color.create( 1.0, 1.0, 0.0, 1.0 ), 
+				            				Color.create( 1.0, 0.75, 0.0, 1.0 ), 
+				            				Color.create( 1.0, 0.0, 1.0, 1.0 ), 
+				            				Color.create( 0.75, 0.0, 0.75, 1.0 ), 
+				            				Color.create( 0.0, 1.0, 1.0, 1.0 ),
+				            				Color.create( 0.0, 0.75, 0.75, 1.0 )
+				            			]
+/*
+				            				Color.create( 1.0, 0.0, 0.0, 1.0 ), 
+				            				Color.create( 0.0, 1.0, 0.0, 1.0 ), 
+				            				Color.create( 0.0, 0.0, 1.0, 1.0 ), 
+				            				Color.create( 1.0, 1.0, 0.0, 1.0 ), 
+				            				Color.create( 1.0, 0.0, 1.0, 1.0 ), 
+				            				Color.create( 0.0, 1.0, 1.0, 1.0 )
+*/
 				            	}
 /*            
 				            	LineGraph {

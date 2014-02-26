@@ -71,12 +71,13 @@ public:
 
 	// image utility functions
 	ImageData* loadImage(const QString& filename);
-	int saveImage(const ImageData* image, const QString& filename);
 	ImageData* loadFullImage(const QString& filename);
 	void sampleImageBuffer(ImageData* image, float x, float y, float* rgba);
 	ImageData* getAdjustedImage(ImageData *image);
+
 	ImageData* getRenderedImage();
 	int setCaptureRect(int x, int y, int width, int height);
+	int saveImage(const ImageData* image, const QString& filename);
 
 
     // create a 2D texture from image data
@@ -102,6 +103,8 @@ public:
 	 */
 	void  releaseGLContext();
 
+
+
 	static int getNativeWindowUsage();
 
 	static int initializeEGL();
@@ -118,9 +121,7 @@ public:
 	static void eglPrintError(const char *msg);
 
 protected:
-
 	int nextp2(int x);
-
 
 	Graphics* _master;
 

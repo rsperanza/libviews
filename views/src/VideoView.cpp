@@ -36,6 +36,11 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 	_screenVideoWindow = 0;
 	_playing = false;
 
+    _leftPadding = 0;
+    _rightPadding = 0;
+    _topPadding = 0;
+    _bottomPadding = 0;
+
 	// I/O variables
 	_videoDeviceOutputID = -1;
 	_audioDeviceOutputID = -1;

@@ -1,6 +1,6 @@
 TEMPLATE = lib
 
-CONFIG += qt warn_on cascades_library
+CONFIG += qt warn_on cascades_library gles2
 CONFIG += hardening
 
 LIBS   += -lmmrndclient -lbbutility -lbb -lpps -lscreen -lEGL -lfreetype -lpng -lstrm
@@ -30,15 +30,15 @@ defineTest(setGLApi) {
 	TARGET = $${oldTarget}-$$1
 	export(TARGET)
 		
-	message("Checking target "$${TARGET})
-	message("Checking GLAPI "$${GLAPI})		
+	message("defineTest Checking target "$${TARGET})
+	message("defineTest Checking GLAPI "$${GLAPI})		
 		
 	# clean GLAPI
 	unset(GLAPI)
 	GLAPI = $$1
 	export(GLAPI)
 	
-	message("Building with OpenGL api "$${GLAPI})	
+	message("defineTest Building with OpenGL api "$${GLAPI})	
 	
 	# define GLAPI for C/C++
 	DEFINES += $$upper($$1)
@@ -47,7 +47,7 @@ defineTest(setGLApi) {
 	}
 	export(DEFINES)
 	
-	message("Building with DEFINES "$${DEFINES})
+	message("defineTest Building with DEFINES "$${DEFINES})
 		
 	# adjust LIBS for GLAPI
 	oldLIBS = $${LIBS}
@@ -60,23 +60,30 @@ defineTest(setGLApi) {
 		LIBS = $${oldLIBS} -lGLESv2
 	}
 	export(LIBS)
+	
+	message("defineTest Building with LIBS "$${LIBS})
 }
 
 isEmpty(GLAPI) {
 	GLAPI = gles1
-	message("Checking GLAPI "$${GLAPI})		
-	message("Checking CONFIG "$${CONFIG})		
-	contains(CONFIG, Releasegles2) {
+	message("isEmpty Checking GLAPI "$${GLAPI})		
+	message("isEmpty Checking CONFIG "$${CONFIG})		
+	contains(CONFIG, gles2) {
+		GLAPI=gles2
+	} else:contains(CONFIG, Releasegles2) {
 		GLAPI=gles2
 	} else:contains(CONFIG, Debuggles2) {
 		GLAPI=gles2
 	}
-	contains(CONFIG, Releasegles3) {
+	
+	contains(CONFIG, gles3) {
+		GLAPI=gles3
+	} else:contains(CONFIG, Releasegles3) {
 		GLAPI=gles3
 	} else:contains(CONFIG, Debuggles3) {
 		GLAPI=gles3
 	}
-	message("Checking GLAPI "$${GLAPI})		
+	message("isEmpty Chose GLAPI "$${GLAPI})		
 }
 
 contains(GLAPI, gles1) {
@@ -89,6 +96,19 @@ contains(GLAPI, gles1) {
 
 !buildpass {
 	BUILDS = gles1 gles2 gles3
+	
+#	message("buildpass isEmpty Checking GLAPI "$${GLAPI})		
+
+#	contains(GLAPI, gles1) {
+#		BUILDS = gles1
+#	} else:contains(GLAPI, gles2) {
+#		BUILDS = gles2
+#	} else:contains(GLAPI, gles3) {
+#		BUILDS = gles3
+#	}
+
+	message("buildpass Chose BUILDS "$${BUILDS})		
+
 	export(BUILDS)
 }
 

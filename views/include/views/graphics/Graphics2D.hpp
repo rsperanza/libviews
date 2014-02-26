@@ -650,12 +650,16 @@ protected:
 	GLuint* _renderVertexIndices;
 	GLfloat* _renderVertexCoords;
 	GLfloat* _renderTextureCoords;
+	GLfloat* _renderMaskTextureCoords;
 
 #ifdef GLES2
 	GLuint   _polyColorRenderingProgram;
 	GLuint   _polyTextureRenderingProgram;
+	GLuint   _polyImageTextureRenderingProgram;
 	GLuint   _polyGradientRenderingProgram;
 	GLuint   _textRenderingProgram;
+	GLuint   _textGradientRenderingProgram;
+	GLuint   _textImageTextureRenderingProgram;
 	GLfloat* _orthoMatrix;
 	GLfloat* _scaleMatrix;
 #endif

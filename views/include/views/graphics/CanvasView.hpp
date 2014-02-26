@@ -56,6 +56,10 @@ public Q_SLOTS:
 	// create a new gradient
 	int createGradient(int segments, QVariantList colors, QVariantList percentages, float radius = 0.0, float angle = 0.0, float originU = 0.0, float originV = 0.0);
 
+	int loadImage(const QString& filename);
+
+	int loadFullImage(const QString& filename);
+
 	// create a new image texture
     int createImageTexture(int imageID, int scaling, int tiling, float uScale, float vScale, int leftMargin, int rightMargin, int topMargin, int bottomMargin);
 
@@ -185,6 +189,8 @@ protected:
 	QMap<int,Font*> _fontIDMap;
 	int _gradientID;
 	QMap<int,Gradient*> _gradientIDMap;
+	int _imageID;
+	QMap<int,ImageData*> _imageIDMap;
 	int _imageTextureID;
 	QMap<int,ImageTexture*> _imageTextureIDMap;
 	int _strokeID;

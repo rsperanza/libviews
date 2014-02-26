@@ -49,6 +49,21 @@ const char* vSource_2DTexture =
 		"    v_texcoord = a_texcoord;\r\n"
 		"}";
 
+const char* vSource_2DMaskTexture =
+		"attribute vec2 a_position;\r\n"
+		"attribute vec2 a_texcoord;\r\n"
+		"attribute vec2 a_maskTexcoord;\r\n"
+		"uniform mat4 u_modelViewMatrix;\r\n"
+		"uniform mat4 u_projectionMatrix;\r\n"
+		"varying vec2 v_texcoord;\r\n"
+		"varying vec2 v_maskTexcoord;\r\n"
+		"void main()\r\n"
+		"{\r\n"
+		"    gl_Position = u_projectionMatrix * u_modelViewMatrix * vec4(a_position, 0.0, 1.0);\r\n"
+		"    v_texcoord = a_texcoord;\r\n"
+		"    v_maskTexcoord = a_maskTexcoord;\r\n"
+		"}";
+
 // fragment shader for 2D texture maps
 const char* fSource_2DTexture =
 		"#ifdef GL_ES\r\n"
@@ -103,6 +118,7 @@ const char* fSource_gradient =
 		"    #endif\r\n"
 		"#endif\r\n"
 		"varying vec2 v_texcoord;\r\n"
+		"varying vec2 v_maskTexcoord;\r\n"
 		"uniform int u_segments;\r\n"
 		"uniform vec4[20] u_colors;\r\n"
 		"uniform float[41] u_percentages;\r\n"
@@ -169,6 +185,86 @@ const char* fSource_gradient =
 		"        }\r\n"
 		"    }\r\n"
 		"    gl_FragColor = vec4(r, g, b, a);\r\n"
+		"}";
+
+const char* fSource_2DMaskGradient =
+		"#ifdef GL_ES\r\n"
+		"    #ifdef GL_FRAGMENT_PRECISION_HIGH\r\n"
+		"        precision highp float;\r\n"
+		"    #else\r\n"
+		"        precision mediump float;\r\n"
+		"    #endif\r\n"
+		"#endif\r\n"
+		"varying vec2 v_texcoord;\r\n"
+		"varying vec2 v_maskTexcoord;\r\n"
+		"uniform int u_segments;\r\n"
+		"uniform vec4[20] u_colors;\r\n"
+		"uniform float[41] u_percentages;\r\n"
+		"uniform float u_radius;\r\n"
+		"uniform float u_angle;\r\n"
+		"uniform vec2 u_origin;\r\n"
+		"uniform sampler2D u_texture;\r\n"
+		"void main()\r\n"
+		"{\r\n"
+		"    float r;\r\n"
+		"    float g;\r\n"
+		"    float b;\r\n"
+		"    float a;\r\n"
+		"    float u;\r\n"
+		"    float v;\r\n"
+		"    float rotu;\r\n"
+		"    float rotv;\r\n"
+		"    float length;\r\n"
+		"    float percent;\r\n"
+		"    float realpercent;\r\n"
+		"    float factor;\r\n"
+		"    float realfactor;\r\n"
+		"    int index;\r\n"
+		"    \r\n"
+		"    r = 0.0;\r\n"
+		"    g = 0.0;\r\n"
+		"    b = 0.0;\r\n"
+		"    a = 1.0;\r\n"
+		"    u = v_texcoord.x - u_origin.x;\r\n"
+		"    v = v_texcoord.y - u_origin.y;\r\n"
+		"    if (u_radius > 0.0) {\r\n"
+		"        length = sqrt(u*u + v*v);\r\n"
+		"        percent = length / u_radius;\r\n"
+		"    } else {\r\n"
+		"        rotu = cos(radians(u_angle))*u + sin(radians(u_angle))*v;\r\n"
+		"        rotv = cos(radians(u_angle+90.0))*u + sin(radians(u_angle+90.0))*v;\r\n"
+		"        percent = rotu;\r\n"
+		"    }\r\n"
+		"    if (percent < 0.0) {\r\n"
+		"        percent += 1.0;\r\n"
+		"    }\r\n"
+		"    if (percent > 1.0) {\r\n"
+		"        percent = 1.0;\r\n"
+		"    }\r\n"
+		"    if (percent < 0.0) {\r\n"
+		"        percent = 0.0;\r\n"
+		"    }\r\n"
+		"    \r\n"
+		"    if (u_segments > 0) {\r\n"
+		"        for (index = 0; index < 2*u_segments; index += 2) {\r\n"
+		"            if (percent >= u_percentages[ index] && percent <= u_percentages[ index+2]) {\r\n"
+		"                factor = (percent - u_percentages[ index]) / (u_percentages[ index+2] - u_percentages[ index]);\r\n"
+		"                if (factor <= u_percentages[ index+1]) {\r\n"
+		"                    realfactor = 0.5 * (factor - u_percentages[ index]) / (u_percentages[ index+1] - u_percentages[ index]);\r\n"
+		"                }\r\n"
+		"                if (factor > u_percentages[index+1]) {\r\n"
+		"                    realfactor = 0.5 + (factor - u_percentages[ index+1]) / (u_percentages[ index+2] - u_percentages[ index+1]);\r\n"
+		"                }\r\n"
+		"                realpercent = (1.0 - realfactor) * u_percentages[ index] + realfactor * u_percentages[ index+2];\r\n"
+		"                r = (1.0-realpercent) * u_colors[ 0].x + realpercent * u_colors[ 1].x;\r\n"
+		"                g = (1.0-realpercent) * u_colors[ 0].y + realpercent * u_colors[ 1].y;\r\n"
+		"                b = (1.0-realpercent) * u_colors[ 0].z + realpercent * u_colors[ 1].z;\r\n"
+		"                a = (1.0-realpercent) * u_colors[ 0].a + realpercent * u_colors[ 1].a;\r\n"
+		"            }\r\n"
+		"        }\r\n"
+		"    }\r\n"
+		"    vec4 temp = texture2D(u_texture, v_maskTexcoord);\r\n"
+		"    gl_FragColor = vec4(r, g, b, a) * temp;\r\n"
 		"}";
 
 
@@ -242,10 +338,6 @@ Graphics2D::Graphics2D(int display, Graphics2D* master) : Graphics(display, mast
 		_renderVertexIndices = NULL;
 	} else {
 		_renderVertexIndices = new GLuint[MAX_VERTEX_COORDINATES];
-
-		for(int index = 0; index < MAX_VERTEX_COORDINATES; index++) {
-			_renderVertexIndices[index] = index;
-		}
 	}
 
 	if (_master2D != this) {
@@ -258,6 +350,12 @@ Graphics2D::Graphics2D(int display, Graphics2D* master) : Graphics(display, mast
 		_renderTextureCoords = NULL;
 	} else {
 		_renderTextureCoords = new GLfloat[MAX_VERTEX_COORDINATES];
+	}
+
+	if (_master2D != this) {
+		_renderMaskTextureCoords = NULL;
+	} else {
+		_renderMaskTextureCoords = new GLfloat[MAX_VERTEX_COORDINATES];
 	}
 
 #ifdef GLES2
@@ -364,6 +462,10 @@ Graphics2D::~Graphics2D()
 	if (_renderTextureCoords) {
 		delete _renderTextureCoords;
 	}
+
+	if (_renderMaskTextureCoords) {
+		delete _renderMaskTextureCoords;
+	}
 }
 
 int Graphics2D::initialize(screen_window_t screenWindow)
@@ -394,6 +496,11 @@ int Graphics2D::initialize(screen_window_t screenWindow)
 		//_textRenderingProgram = loadShader(vSource_2DTexture, fSource_uvtest);
 		if(_textRenderingProgram == 0) {
 			qCritical() << "Initialize _textRenderingProgram failed\n";
+		}
+
+		_textGradientRenderingProgram = loadShader(vSource_2DMaskTexture, fSource_2DMaskGradient);
+		if(_textGradientRenderingProgram == 0) {
+			qCritical() << "Initialize _textGradientRenderingProgram failed\n";
 		}
 #endif
 	}
@@ -1531,7 +1638,7 @@ void Graphics2D::drawRoundRect(double x, double y, double width, double height, 
 // Measures the bounding box of the text of the specified String, using the current font in the Graphics2D context.
 void Graphics2D::measureString(QString text, double* width, double* height)
 {
-	qDebug() << "Graphics2D::measureString: text : " << text;
+	//qDebug() << "Graphics2D::measureString: text : " << text;
 
 	wchar_t *wtext;
 
@@ -1582,14 +1689,14 @@ void Graphics2D::measureString(QString text, double* width, double* height)
 		 	*width += _currentFont->kerning[previousCharMapIndex * _currentFont->numberCharacters + charMapIndex];
 		}
 
-		qDebug() << "Graphics2D::measureString: text width: " << i << " " << wtext[i] << " " << c << " "  << _currentFont->advance[charMapIndex] << "\n";
+		//qDebug() << "Graphics2D::measureString: text width: " << i << " " << wtext[i] << " " << c << " "  << _currentFont->advance[charMapIndex] << "\n";
 
 		if (width) {
 			*width += _currentFont->advance[charMapIndex];
 		}
 		if (height) {
 			if (*height < _currentFont->height[charMapIndex]) {
-				qDebug() << "Graphics2D::measureString: text height: " << i << " " << wtext[i] << " " << c << " "  << _currentFont->height[charMapIndex] << "\n";
+				//qDebug() << "Graphics2D::measureString: text height: " << i << " " << wtext[i] << " " << c << " "  << _currentFont->height[charMapIndex] << "\n";
 				*height = _currentFont->height[charMapIndex];
 			}
 		}
@@ -1597,8 +1704,8 @@ void Graphics2D::measureString(QString text, double* width, double* height)
 		previousCharMapIndex = charMapIndex;
 	}
 
-	qDebug() << "Graphics2D::measureString: text width: " << *width << "\n";
-	qDebug() << "Graphics2D::measureString: text height: " << *height << "\n";
+	//qDebug() << "Graphics2D::measureString: text width: " << *width << "\n";
+	//qDebug() << "Graphics2D::measureString: text height: " << *height << "\n";
 }
 
 // Draws the text given by the specified string, using this graphics context's current font and color.
@@ -2475,6 +2582,15 @@ void Graphics2D::renderDrawLine(int commandCount)
 			_renderVertexCoords[renderIndex*4+7] = (GLfloat)dashCoords[index*2+3] + (dx * _renderStroke->width / (2.0 * length));
 		}
 
+		_renderTextureCoords[renderIndex*4+0] = (GLfloat)0.0;
+		_renderTextureCoords[renderIndex*4+1] = (GLfloat)1.0;
+		_renderTextureCoords[renderIndex*4+2] = (GLfloat)1.0;
+		_renderTextureCoords[renderIndex*4+3] = (GLfloat)1.0;
+		_renderTextureCoords[renderIndex*4+4] = (GLfloat)0.0;
+		_renderTextureCoords[renderIndex*4+5] = (GLfloat)0.0;
+		_renderTextureCoords[renderIndex*4+6] = (GLfloat)1.0;
+		_renderTextureCoords[renderIndex*4+7] = (GLfloat)0.0;
+
 		renderIndex++;
 
 		if ((renderIndex*8 + 8) > MAX_VERTEX_COORDINATES) {
@@ -2649,7 +2765,12 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 	}
 
 	int renderIndex = 0;
-	double xPoints[4], yPoints[4];
+	double xPoints[4], yPoints[4], uPoints[4], vPoints[4];
+
+
+	// calculate u,v texture bounds
+	float x = 0.0, y = 0.0, minX = 1.0e6, minY = 1.0e6, maxX = -1.0e6, maxY = -1.0e6;
+
 	for(int index = 0; index < dashPoints-1; index += 2) {
 		dx = ((GLfloat)dashCoords[index*2+2] - (GLfloat)dashCoords[index*2+0]);
 		dy = ((GLfloat)dashCoords[index*2+3] - (GLfloat)dashCoords[index*2+1]);
@@ -2665,6 +2786,63 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 		yPoints[2] = dashCoords[index*2+1] - (dx * _renderStroke->width / 2.0);
 		xPoints[3] = dashCoords[index*2+2] - (dy * _renderStroke->width / 2.0);
 		yPoints[3] = dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
+
+		for(int index1 = 0; index1 < 4; index1++) {
+			x += xPoints[index1];
+			y += yPoints[index1];
+			renderIndex ++;
+
+			if (xPoints[index1] < minX) {
+				minX = xPoints[index1];
+			}
+			if (xPoints[index1] > maxX) {
+				maxX = xPoints[index1];
+			}
+
+			if (yPoints[index1] < minY) {
+				minY = yPoints[index1];
+			}
+			if (yPoints[index1] > maxY) {
+				maxY = yPoints[index1];
+			}
+		}
+	}
+
+	x /= renderIndex;
+	y /= renderIndex;
+
+
+
+	renderIndex = 0;
+	for(int index = 0; index < dashPoints-1; index += 2) {
+		dx = ((GLfloat)dashCoords[index*2+2] - (GLfloat)dashCoords[index*2+0]);
+		dy = ((GLfloat)dashCoords[index*2+3] - (GLfloat)dashCoords[index*2+1]);
+		lineLength = sqrt (fabs(dx * dx) + fabs(dy * dy));
+		dx /= lineLength;
+		dy /= lineLength;
+
+		xPoints[0] = dashCoords[index*2+0] - (dy * _renderStroke->width / 2.0);
+		yPoints[0] = dashCoords[index*2+1] + (dx * _renderStroke->width / 2.0);
+		xPoints[1] = dashCoords[index*2+2] + (dy * _renderStroke->width / 2.0);
+		yPoints[1] = dashCoords[index*2+3] - (dx * _renderStroke->width / 2.0);
+		xPoints[2] = dashCoords[index*2+0] + (dy * _renderStroke->width / 2.0);
+		yPoints[2] = dashCoords[index*2+1] - (dx * _renderStroke->width / 2.0);
+		xPoints[3] = dashCoords[index*2+2] - (dy * _renderStroke->width / 2.0);
+		yPoints[3] = dashCoords[index*2+3] + (dx * _renderStroke->width / 2.0);
+
+
+		for(int index1 = 0; index1 < 4; index1++) {
+			if (minX == maxX) {
+				uPoints[index1] = 0.0;
+			} else {
+				uPoints[index1] = (xPoints[index1] - minX) / (maxX - minX);
+			}
+			if (minY == maxY) {
+				vPoints[index1] = 0.0;
+			} else {
+				vPoints[index1] = (yPoints[index1] - minY) / (maxY - minY);
+			}
+		}
 
 		if (index > 0 && index < (dashPoints-2)) {
 
@@ -2689,6 +2867,7 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 			}
 		}
 
+		qDebug()  << "Graphics2D::renderDrawPolyline: : " << xPoints[0] << " " << yPoints[0]  << " " << xPoints[1] << " " << yPoints[1] << " "  << xPoints[2] << " " << yPoints[2]  << " " << xPoints[3]  << " " << xPoints[3];
 
 		if (fabs(dy) > fabs(dx)) {
 			_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[3];
@@ -2699,6 +2878,15 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 			_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[1];
 			_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[2];
 			_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[2];
+
+			_renderTextureCoords[renderIndex*8+0] = (GLfloat)uPoints[3];
+			_renderTextureCoords[renderIndex*8+1] = (GLfloat)vPoints[3];
+			_renderTextureCoords[renderIndex*8+2] = (GLfloat)uPoints[0];
+			_renderTextureCoords[renderIndex*8+3] = (GLfloat)vPoints[0];
+			_renderTextureCoords[renderIndex*8+4] = (GLfloat)uPoints[1];
+			_renderTextureCoords[renderIndex*8+5] = (GLfloat)vPoints[1];
+			_renderTextureCoords[renderIndex*8+6] = (GLfloat)uPoints[2];
+			_renderTextureCoords[renderIndex*8+7] = (GLfloat)vPoints[2];
 		} else {
 			_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[2];
 			_renderVertexCoords[renderIndex*8+1] = (GLfloat)yPoints[2];
@@ -2708,6 +2896,15 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 			_renderVertexCoords[renderIndex*8+5] = (GLfloat)yPoints[0];
 			_renderVertexCoords[renderIndex*8+6] = (GLfloat)xPoints[3];
 			_renderVertexCoords[renderIndex*8+7] = (GLfloat)yPoints[3];
+
+			_renderTextureCoords[renderIndex*8+0] = (GLfloat)uPoints[2];
+			_renderTextureCoords[renderIndex*8+1] = (GLfloat)vPoints[2];
+			_renderTextureCoords[renderIndex*8+2] = (GLfloat)uPoints[1];
+			_renderTextureCoords[renderIndex*8+3] = (GLfloat)vPoints[1];
+			_renderTextureCoords[renderIndex*8+4] = (GLfloat)uPoints[0];
+			_renderTextureCoords[renderIndex*8+5] = (GLfloat)vPoints[0];
+			_renderTextureCoords[renderIndex*8+6] = (GLfloat)uPoints[3];
+			_renderTextureCoords[renderIndex*8+7] = (GLfloat)vPoints[3];
 		}
 
 		renderIndex++;
@@ -2748,7 +2945,7 @@ void Graphics2D::renderDrawTriangles(int renderCount, int renderPoints)
 
 	if (_renderGradient) {
 
-		qDebug()  << "Graphics2D::renderDrawTriangles: _renderGradient";
+		//qDebug()  << "Graphics2D::renderDrawTriangles: _renderGradient";
 
 	    glUseProgram(_polyGradientRenderingProgram);
 
@@ -3312,6 +3509,27 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 	arcAngle   = 360.0;
 
 
+	// calculate u,v texture bounds
+	float minX = 1.0e6, minY = 1.0e6, maxX = -1.0e6, maxY = -1.0e6;
+
+	if (fill) {
+		minX = x;
+		minY = y;
+		maxX = x + width;
+		maxY = y + height;
+	} else {
+		minX = x;
+		minY = y;
+		maxX = x + width;
+		maxY = y + height;
+		if (_renderStroke->width > 0) {
+			minX -= _renderStroke->width / 2.0;
+			minY -= _renderStroke->width / 2.0;
+			maxX += _renderStroke->width / 2.0;
+			maxY += _renderStroke->width / 2.0;
+		}
+	}
+
 	radiusX = arcWidth;
 	radiusY = arcHeight;
 
@@ -3680,6 +3898,20 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 							_renderVertexCoords[renderIndex*6+3] = (GLfloat)lastY;
 							_renderVertexCoords[renderIndex*6+4] = (GLfloat)drawX;
 							_renderVertexCoords[renderIndex*6+5] = (GLfloat)drawY;
+
+							for(int index1 = 0; index1 < 6; index1 += 2) {
+								if (minX == maxX) {
+									_renderTextureCoords[renderIndex*6+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+								}
+								if (minY == maxY) {
+									_renderTextureCoords[renderIndex*6+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+								}
+							}
+
 						} else {
 							if (fabs(dy) > fabs(dx)) {
 								_renderVertexCoords[renderIndex*8+0] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
@@ -3699,6 +3931,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 								_renderVertexCoords[renderIndex*8+5] = (GLfloat)lastY + (dx * _renderStroke->width / (2.0 * length));
 								_renderVertexCoords[renderIndex*8+6] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
 								_renderVertexCoords[renderIndex*8+7] = (GLfloat)drawY + (dx * _renderStroke->width / (2.0 * length));
+							}
+
+							for(int index1 = 0; index1 < 8; index1 += 2) {
+								if (minX == maxX) {
+									_renderTextureCoords[renderIndex*8+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*8+index1] = (_renderVertexCoords[renderIndex*8+index1] - minX) / (maxX - minX);
+								}
+								if (minY == maxY) {
+									_renderTextureCoords[renderIndex*8+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*8+index1+1] = (_renderVertexCoords[renderIndex*8+index1+1] - minY) / (maxY - minY);
+								}
 							}
 						}
 
@@ -3740,6 +3985,20 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y1;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x2;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y2;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
+
 					renderIndex++;
 
 					_renderVertexCoords[renderIndex*6+0] = (GLfloat)x2;
@@ -3748,6 +4007,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y1 - height;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x1;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y1;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
 				}
 
 				if (y2 < y1 && x1 == x2) {
@@ -3757,6 +4029,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y2;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x2 + arcWidth;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y2;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
 					renderIndex++;
 
 					_renderVertexCoords[renderIndex*6+0] = (GLfloat)x2 + arcWidth;
@@ -3765,6 +4050,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y1;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x1;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y1;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
 				}
 
 				if (y2 > y1 && x1 == x2) {
@@ -3774,6 +4072,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y2;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x2 - arcWidth;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y2;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
 					renderIndex++;
 
 					_renderVertexCoords[renderIndex*6+0] = (GLfloat)x2 - arcWidth;
@@ -3782,6 +4093,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*6+3] = (GLfloat)y1;
 					_renderVertexCoords[renderIndex*6+4] = (GLfloat)x1;
 					_renderVertexCoords[renderIndex*6+5] = (GLfloat)y1;
+
+					for(int index1 = 0; index1 < 6; index1 += 2) {
+						if (minX == maxX) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+						}
+						if (minY == maxY) {
+							_renderTextureCoords[renderIndex*6+index1] = 0.0;
+						} else {
+							_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+						}
+					}
 				}
 			} else {
 				if (fabs(dy) > fabs(dx)) {
@@ -3802,6 +4126,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 					_renderVertexCoords[renderIndex*8+5] = (GLfloat)y1 + (dx * _renderStroke->width / (2.0 * length));
 					_renderVertexCoords[renderIndex*8+6] = (GLfloat)x2 - (dy * _renderStroke->width / (2.0 * length));
 					_renderVertexCoords[renderIndex*8+7] = (GLfloat)y2 + (dx * _renderStroke->width / (2.0 * length));
+				}
+
+				for(int index1 = 0; index1 < 8; index1 += 2) {
+					if (minX == maxX) {
+						_renderTextureCoords[renderIndex*8+index1] = 0.0;
+					} else {
+						_renderTextureCoords[renderIndex*8+index1] = (_renderVertexCoords[renderIndex*8+index1] - minX) / (maxX - minX);
+					}
+					if (minY == maxY) {
+						_renderTextureCoords[renderIndex*8+index1] = 0.0;
+					} else {
+						_renderTextureCoords[renderIndex*8+index1+1] = (_renderVertexCoords[renderIndex*8+index1+1] - minY) / (maxY - minY);
+					}
 				}
 			}
 			renderIndex++;
@@ -3881,6 +4218,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 							_renderVertexCoords[renderIndex*6+3] = (GLfloat)lastY;
 							_renderVertexCoords[renderIndex*6+4] = (GLfloat)drawX;
 							_renderVertexCoords[renderIndex*6+5] = (GLfloat)drawY;
+
+							for(int index1 = 0; index1 < 6; index1 += 2) {
+								if (minX == maxX) {
+									_renderTextureCoords[renderIndex*6+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*6+index1] = (_renderVertexCoords[renderIndex*6+index1] - minX) / (maxX - minX);
+								}
+								if (minY == maxY) {
+									_renderTextureCoords[renderIndex*6+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*6+index1+1] = (_renderVertexCoords[renderIndex*6+index1+1] - minY) / (maxY - minY);
+								}
+							}
 						} else {
 							if (fabs(dy) > fabs(dx)) {
 								_renderVertexCoords[renderIndex*8+0] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
@@ -3900,6 +4250,19 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 								_renderVertexCoords[renderIndex*8+5] = (GLfloat)lastY + (dx * _renderStroke->width / (2.0 * length));
 								_renderVertexCoords[renderIndex*8+6] = (GLfloat)drawX - (dy * _renderStroke->width / (2.0 * length));
 								_renderVertexCoords[renderIndex*8+7] = (GLfloat)drawY + (dx * _renderStroke->width / (2.0 * length));
+							}
+
+							for(int index1 = 0; index1 < 8; index1 += 2) {
+								if (minX == maxX) {
+									_renderTextureCoords[renderIndex*8+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*8+index1] = (_renderVertexCoords[renderIndex*8+index1] - minX) / (maxX - minX);
+								}
+								if (minY == maxY) {
+									_renderTextureCoords[renderIndex*8+index1] = 0.0;
+								} else {
+									_renderTextureCoords[renderIndex*8+index1+1] = (_renderVertexCoords[renderIndex*8+index1+1] - minY) / (maxY - minY);
+								}
 							}
 						}
 
@@ -3940,7 +4303,7 @@ void Graphics2D::renderDrawFillRoundRect(int commandCount)
 // Draws the text given by the specified string, using this graphics context's current font and color.
 void Graphics2D::renderDrawString(int commandCount)
 {
-	qDebug()  << "Graphics2D::renderDrawString: " << commandCount << " : " << _drawFloatIndices[commandCount*2+0] << " " << _drawFloatIndices[commandCount*2+1];
+	//qDebug()  << "Graphics2D::renderDrawString: " << commandCount << " : " << _drawFloatIndices[commandCount*2+0] << " " << _drawFloatIndices[commandCount*2+1];
 
 	QString *text;
 	wchar_t *wtext;
@@ -3954,12 +4317,9 @@ void Graphics2D::renderDrawString(int commandCount)
 	x = _drawFloats[_drawFloatIndices[commandCount*2+0]+0];
 	y = _drawFloats[_drawFloatIndices[commandCount*2+0]+1];
 
+	//qDebug()  << "Graphics2D::renderDrawString: x,y: " << x << " : " << y;
 
     int i, j, c;
-    GLfloat *vertices;
-    GLfloat *_renderTextureCoords;
-    GLushort* indices;
-
 
     if (!_renderFont) {
         qCritical() << "Graphics2D::renderDrawString: Font must not be null\n";
@@ -3977,14 +4337,28 @@ void Graphics2D::renderDrawString(int commandCount)
 
     int textLength = wcslen(wtext);
 
-    vertices = (GLfloat*) malloc(sizeof(GLfloat) * 8 * textLength);
-    _renderTextureCoords = (GLfloat*) malloc(sizeof(GLfloat) * 8 * textLength);
-    indices = (GLushort*) malloc(sizeof(GLushort) * 6 * textLength);
-
 
     int charMapIndex;
 	int previousCharMapIndex;
     float pen_x = 0.0f;
+
+
+	// calculate u,v texture bounds
+	float minX = 1.0e6, minY = 1.0e6, maxX = -1.0e6, maxY = -1.0e6;
+
+	if (x < minX) {
+		minX = x;
+	}
+	if (x > maxX) {
+		maxX = x;
+	}
+
+	if (y < minY) {
+		minY = y;
+	}
+	if (y > maxY) {
+		maxY = y;
+	}
 
     for(i = 0; i < textLength; ++i) {
 		c = (int)wtext[i];
@@ -4009,30 +4383,123 @@ void Graphics2D::renderDrawString(int commandCount)
 			pen_x += _currentFont->kerning[previousCharMapIndex * _currentFont->numberCharacters + charMapIndex];
 		}
 
-		vertices[8 * i + 0] = x + pen_x + _renderFont->offsetX[charMapIndex];
-		vertices[8 * i + 1] = y + _renderFont->offsetY[charMapIndex];
-		vertices[8 * i + 2] = vertices[8 * i + 0] + _renderFont->width[charMapIndex];
-		vertices[8 * i + 3] = vertices[8 * i + 1];
-		vertices[8 * i + 4] = vertices[8 * i + 0];
-		vertices[8 * i + 5] = vertices[8 * i + 1] + _renderFont->height[charMapIndex];
-		vertices[8 * i + 6] = vertices[8 * i + 2];
-		vertices[8 * i + 7] = vertices[8 * i + 5];
+		double charX = x + pen_x + _renderFont->offsetX[charMapIndex];
+		double charY = y + _renderFont->offsetY[charMapIndex];
+		double charMaxX = charX + _renderFont->width[charMapIndex];
+		double charMaxY = charY + _renderFont->height[charMapIndex];
 
-		_renderTextureCoords[8 * i + 0] = _renderFont->texX1[charMapIndex];
-		_renderTextureCoords[8 * i + 1] = _renderFont->texY2[charMapIndex];
-		_renderTextureCoords[8 * i + 2] = _renderFont->texX2[charMapIndex];
-		_renderTextureCoords[8 * i + 3] = _renderFont->texY2[charMapIndex];
-		_renderTextureCoords[8 * i + 4] = _renderFont->texX1[charMapIndex];
-		_renderTextureCoords[8 * i + 5] = _renderFont->texY1[charMapIndex];
-		_renderTextureCoords[8 * i + 6] = _renderFont->texX2[charMapIndex];
-		_renderTextureCoords[8 * i + 7] = _renderFont->texY1[charMapIndex];
+		if (charX < minX) {
+			minX = charX;
+		}
+		if (charX > maxX) {
+			maxX = charX;
+		}
 
-		indices[i * 6 + 0] = 4 * i + 0;
-		indices[i * 6 + 1] = 4 * i + 1;
-		indices[i * 6 + 2] = 4 * i + 2;
-		indices[i * 6 + 3] = 4 * i + 2;
-		indices[i * 6 + 4] = 4 * i + 1;
-		indices[i * 6 + 5] = 4 * i + 3;
+		if (charY < minY) {
+			minY = charY;
+		}
+		if (charY > maxY) {
+			maxY = charY;
+		}
+
+		if (charMaxX < minX) {
+			minX = charMaxX;
+		}
+		if (charMaxX > maxX) {
+			maxX = charMaxX;
+		}
+
+		if (charMaxY < minY) {
+			minY = charMaxY;
+		}
+		if (charMaxY > maxY) {
+			maxY = charMaxY;
+		}
+
+		//Assume we are only working with typewriter fonts
+		pen_x += _renderFont->advance[charMapIndex];
+    }
+	//qDebug()  << "Graphics2D::renderDrawString: bounds: " << minX << " : " << maxX << " : " << minY << " : " << maxY;
+
+    pen_x = 0.0f;
+    for(i = 0; i < textLength; ++i) {
+		c = (int)wtext[i];
+
+		charMapIndex = 0;
+		for(j = 0; j < _renderFont->numberCharacters; j++) {
+			if (_renderFont->charMap[j] == c) {
+				charMapIndex = j;
+				break;
+			}
+		}
+
+		if (i > 0) {
+			previousCharMapIndex = 0;
+			for(j = 0; j < _renderFont->numberCharacters; j++) {
+				if (_renderFont->charMap[j] == wtext[i-1]) {
+					previousCharMapIndex = j;
+					break;
+				}
+			}
+
+			pen_x += _currentFont->kerning[previousCharMapIndex * _currentFont->numberCharacters + charMapIndex];
+		}
+
+		double charX    = x + pen_x + _renderFont->offsetX[charMapIndex];
+		double charY    = y +         _renderFont->offsetY[charMapIndex];
+		double charMaxX = charX     + _renderFont->width[charMapIndex];
+		double charMaxY = charY     + _renderFont->height[charMapIndex];
+		//qDebug()  << "Graphics2D::renderDrawString: char bounds: " << charX << " : " << charY << " : " << charMaxX << " : " << charMaxY;
+
+		_renderVertexCoords[8 * i + 0] = charX;
+		_renderVertexCoords[8 * i + 1] = charY;
+		_renderVertexCoords[8 * i + 2] = charMaxX;
+		_renderVertexCoords[8 * i + 3] = charY;
+		_renderVertexCoords[8 * i + 4] = charX;
+		_renderVertexCoords[8 * i + 5] = charMaxY;
+		_renderVertexCoords[8 * i + 6] = charMaxX;
+		_renderVertexCoords[8 * i + 7] = charMaxY;
+		//qDebug()  << "Graphics2D::renderDrawString: char coords: " << charX << " : " << charY << " : " << charMaxX << " : " << charY;
+		//qDebug()  << "Graphics2D::renderDrawString: char coords: " << charX << " : " << charMaxY << " : " << charMaxX << " : " << charMaxY;
+
+		_renderMaskTextureCoords[8 * i + 0] = _renderFont->texX1[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 1] = _renderFont->texY2[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 2] = _renderFont->texX2[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 3] = _renderFont->texY2[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 4] = _renderFont->texX1[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 5] = _renderFont->texY1[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 6] = _renderFont->texX2[charMapIndex];
+		_renderMaskTextureCoords[8 * i + 7] = _renderFont->texY1[charMapIndex];
+
+		if (minX == maxX) {
+			_renderTextureCoords[8 * i + 0] = 0.0;
+			_renderTextureCoords[8 * i + 2] = 0.0;
+			_renderTextureCoords[8 * i + 4] = 0.0;
+			_renderTextureCoords[8 * i + 6] = 0.0;
+		} else {
+			_renderTextureCoords[8 * i + 0] = (charX - minX) / (maxX - minX);
+			_renderTextureCoords[8 * i + 2] = (charMaxX - minX) / (maxX - minX);
+			_renderTextureCoords[8 * i + 4] = (charX - minX) / (maxX - minX);
+			_renderTextureCoords[8 * i + 6] = (charMaxX - minX) / (maxX - minX);
+		}
+		if (minY == maxY) {
+			_renderTextureCoords[8 * i + 1] = 0.0;
+			_renderTextureCoords[8 * i + 3] = 0.0;
+			_renderTextureCoords[8 * i + 5] = 0.0;
+			_renderTextureCoords[8 * i + 7] = 0.0;
+		} else {
+			_renderTextureCoords[8 * i + 1] = (charY - minY) / (maxY - minY);
+			_renderTextureCoords[8 * i + 3] = (charY - minY) / (maxY - minY);
+			_renderTextureCoords[8 * i + 5] = (charMaxY - minY) / (maxY - minY);
+			_renderTextureCoords[8 * i + 7] = (charMaxY - minY) / (maxY - minY);
+		}
+
+		_renderVertexIndices[i * 6 + 0] = 4 * i + 0;
+		_renderVertexIndices[i * 6 + 1] = 4 * i + 1;
+		_renderVertexIndices[i * 6 + 2] = 4 * i + 2;
+		_renderVertexIndices[i * 6 + 3] = 4 * i + 2;
+		_renderVertexIndices[i * 6 + 4] = 4 * i + 1;
+		_renderVertexIndices[i * 6 + 5] = 4 * i + 3;
 
 		//Assume we are only working with typewriter fonts
 		pen_x += _renderFont->advance[charMapIndex];
@@ -4049,58 +4516,118 @@ void Graphics2D::renderDrawString(int commandCount)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glVertexPointer(2, GL_FLOAT, 0, vertices);
-	glTexCoordPointer(2, GL_FLOAT, 0, _renderTextureCoords);
+	glVertexPointer(2, GL_FLOAT, 0, _renderVertexCoords);
+	glTexCoordPointer(2, GL_FLOAT, 0, _renderMaskTextureCoords);
 	glBindTexture(GL_TEXTURE_2D, _renderFont->fontTexture);
 
-	glDrawElements(GL_TRIANGLES, 6 * textLength, GL_UNSIGNED_SHORT, indices);
+	glDrawElements(GL_TRIANGLES, 6 * textLength, GL_UNSIGNED_INT, _renderVertexIndices);
 
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisable(GL_TEXTURE_2D);
 
 #elif defined GLES2
-	//Render text
-	glUseProgram(_textRenderingProgram);
 
-	// Store the locations of the shader variables we need later
-	GLint positionLoc = glGetAttribLocation(_textRenderingProgram, "a_position");
-	GLint texcoordLoc = glGetAttribLocation(_textRenderingProgram, "a_texcoord");
-	GLint textureLoc = glGetUniformLocation(_textRenderingProgram, "u_texture");
-	GLint colorLoc = glGetUniformLocation(_textRenderingProgram, "u_color");
-    GLint pmLoc = glGetUniformLocation(_textRenderingProgram, "u_projectionMatrix");
-    GLint mvmLoc = glGetUniformLocation(_textRenderingProgram, "u_modelViewMatrix");
+	if (_renderGradient) {
+		//Render text
+		glUseProgram(_textGradientRenderingProgram);
+
+		// Store the locations of the shader variables we need later
+		GLint positionLoc = glGetAttribLocation(_textGradientRenderingProgram, "a_position");
+		GLint maskTextcoordLoc = glGetAttribLocation(_textGradientRenderingProgram, "a_maskTexcoord");
+		GLint texcoordLoc = glGetAttribLocation(_textGradientRenderingProgram, "a_texcoord");
+		GLint textureLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_texture");
+		GLint colorLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_color");
+		GLint pmLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_projectionMatrix");
+		GLint mvmLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_modelViewMatrix");
+
+	    GLint segmentsLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_segments");
+		GLint colorsLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_colors");
+		GLint percentagesLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_percentages");
+		GLint radiusLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_radius");
+		GLint angleLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_angle");
+		GLint originLoc = glGetUniformLocation(_textGradientRenderingProgram, "u_origin");
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, _renderFont->fontTexture);
+		glUniform1i(textureLoc, 0);
+
+		glUniformMatrix4fv(pmLoc, 1, GL_FALSE, _orthoMatrix);
+		glUniformMatrix4fv(mvmLoc, 1, GL_FALSE, _renderModelMatrix);
+		glUniform4f(colorLoc, _renderForegroundColor.red, _renderForegroundColor.green, _renderForegroundColor.blue, _renderForegroundColor.alpha);
+		glUniform1i(segmentsLoc, _renderGradient->segments);
+
+		GLfloat gradientColors[400];
+		for(int index = 0; index < _renderGradient->segments+1; index++) {
+			gradientColors[index*4+0] = _renderGradient->colors[index].red;
+			gradientColors[index*4+1] = _renderGradient->colors[index].green;
+			gradientColors[index*4+2] = _renderGradient->colors[index].blue;
+			gradientColors[index*4+3] = _renderGradient->colors[index].alpha;
+		}
+		glUniform4fv(colorsLoc, _renderGradient->segments+1, gradientColors);
+		glUniform1fv(percentagesLoc, _renderGradient->segments*2+1, _renderGradient->percentages);
+		glUniform1f(radiusLoc, _renderGradient->radius);
+		glUniform1f(angleLoc, _renderGradient->angle);
+		glUniform2f(originLoc, _renderGradient->originU, _renderGradient->originV);
 
 
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glEnableVertexAttribArray(positionLoc);
+		glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderVertexCoords);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, _renderFont->fontTexture);
-	glUniform1i(textureLoc, 0);
+		glEnableVertexAttribArray(maskTextcoordLoc);
+		glVertexAttribPointer(maskTextcoordLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderMaskTextureCoords);
 
-	glUniformMatrix4fv(pmLoc, 1, GL_FALSE, _orthoMatrix);
-	glUniformMatrix4fv(mvmLoc, 1, GL_FALSE, _renderModelMatrix);
-	glUniform4f(colorLoc, _renderForegroundColor.red, _renderForegroundColor.green, _renderForegroundColor.blue, _renderForegroundColor.alpha);
+		glEnableVertexAttribArray(texcoordLoc);
+		glVertexAttribPointer(texcoordLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderTextureCoords);
 
-	glEnableVertexAttribArray(positionLoc);
-	glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+		   //Draw the string
+		glDrawElements(GL_TRIANGLES, 6 * textLength, GL_UNSIGNED_INT, _renderVertexIndices);
 
-	glEnableVertexAttribArray(texcoordLoc);
-	glVertexAttribPointer(texcoordLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderTextureCoords);
+		glDisableVertexAttribArray(texcoordLoc);
+		glDisableVertexAttribArray(maskTextcoordLoc);
+		glDisableVertexAttribArray(positionLoc);
 
-	   //Draw the string
-	glDrawElements(GL_TRIANGLES, 6 * textLength, GL_UNSIGNED_SHORT, indices);
+	} else {
+		//Render text
+		glUseProgram(_textRenderingProgram);
 
-	glDisableVertexAttribArray(texcoordLoc);
-	glDisableVertexAttribArray(positionLoc);
+		// Store the locations of the shader variables we need later
+		GLint positionLoc = glGetAttribLocation(_textRenderingProgram, "a_position");
+		GLint texcoordLoc = glGetAttribLocation(_textRenderingProgram, "a_texcoord");
+		GLint textureLoc = glGetUniformLocation(_textRenderingProgram, "u_texture");
+		GLint colorLoc = glGetUniformLocation(_textRenderingProgram, "u_color");
+		GLint pmLoc = glGetUniformLocation(_textRenderingProgram, "u_projectionMatrix");
+		GLint mvmLoc = glGetUniformLocation(_textRenderingProgram, "u_modelViewMatrix");
+
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, _renderFont->fontTexture);
+		glUniform1i(textureLoc, 0);
+
+		glUniformMatrix4fv(pmLoc, 1, GL_FALSE, _orthoMatrix);
+		glUniformMatrix4fv(mvmLoc, 1, GL_FALSE, _renderModelMatrix);
+		glUniform4f(colorLoc, _renderForegroundColor.red, _renderForegroundColor.green, _renderForegroundColor.blue, _renderForegroundColor.alpha);
+
+		glEnableVertexAttribArray(positionLoc);
+		glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderVertexCoords);
+
+		glEnableVertexAttribArray(texcoordLoc);
+		glVertexAttribPointer(texcoordLoc, 2, GL_FLOAT, GL_FALSE, 0, _renderMaskTextureCoords);
+
+		   //Draw the string
+		glDrawElements(GL_TRIANGLES, 6 * textLength, GL_UNSIGNED_INT, _renderVertexIndices);
+
+		glDisableVertexAttribArray(texcoordLoc);
+		glDisableVertexAttribArray(positionLoc);
+	}
 #else
 #error libviews should be compiled with either GLES1 or GLES2 -D flags.
 #endif
 	glDisable(GL_BLEND);
-
-    free(vertices);
-    free(_renderTextureCoords);
-    free(indices);
 }
 
 // Draws a sequence of connected lines defined by arrays of x and y coordinates.
