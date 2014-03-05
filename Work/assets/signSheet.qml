@@ -23,6 +23,8 @@ Sheet {
 
     signal signatureImage(string signatureImageURL)
 
+	peekEnabled: false
+	
     content: 
         Page {
         
@@ -88,11 +90,12 @@ Sheet {
 			        SignaturePad {
 			            id: signature
 			            objectName: "signature"
-			            visible: false
+			            //visible: false
 			            
 			            horizontalAlignment: HorizontalAlignment.Fill
+			            verticalAlignment: VerticalAlignment.Fill
 			            
-			            preferredHeight: 300
+			            //preferredHeight: 300
 			            
 			            onSaved: {
 			            	console.log("onSaved: " + signSheet.signatureImageFileURL);
@@ -107,6 +110,11 @@ Sheet {
 			        }
 		            
 		        }
+		        
+		onCreationCompleted: {
+	    	OrientationSupport.supportedDisplayOrientation =
+	        SupportedDisplayOrientation.DisplayLandscape; 
+	    }
 	}
 
     onReadyForFocusChanged: {

@@ -156,12 +156,8 @@ void ViewsThread::update() {
 
 	viewCount = _views.size();
 
-	_viewsMutex.unlock();
-
 	if (viewCount > 0) {
 		int size[2];
-
-		_viewsMutex.lock();
 
 		int attached = NativeWindow::screenDisplayAttached(size);
 
@@ -234,9 +230,9 @@ void ViewsThread::update() {
 				}
 			}
 		}
-
-		_viewsMutex.unlock();
 	}
+
+	_viewsMutex.unlock();
 }
 
 void ViewsThread::cleanup() {
@@ -274,12 +270,8 @@ void ViewsThread::render() {
 
 	viewCount = _views.size();
 
-	_viewsMutex.unlock();
-
 	if (viewCount > 0) {
 		int size[2];
-
-		_viewsMutex.lock();
 
 		int attached = NativeWindow::screenDisplayAttached(size);
 
@@ -318,9 +310,9 @@ void ViewsThread::render() {
 		for (int index = 0; index < _views.size(); index++) {
 			_views.at(index)->renderView();
 		}
-
-		_viewsMutex.unlock();
 	}
+
+	_viewsMutex.unlock();
 }
 
 
@@ -368,9 +360,13 @@ void ViewsThread::run()
 								for(index = 0; index < _views.size(); index++) {
 									if (_views.at(index)->display() == DISPLAY_HDMI) {
 										if (attached) {
-											_views.at(index)->setVisible(true);
+											if (!_views.at(index)->visible()) {
+												_views.at(index)->setVisible(true);
+											}
 										} else {
-											_views.at(index)->setVisible(false);
+											if (_views.at(index)->visible()) {
+												_views.at(index)->setVisible(false);
+											}
 										}
 									}
 								}

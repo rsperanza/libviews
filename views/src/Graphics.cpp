@@ -47,25 +47,19 @@ Graphics::Graphics(int display, Graphics *master = NULL) : _width(0), _height(0)
 	_eglDisplay = getDisplay(display);
 
 	_renderedImage = NULL;
+
+	qDebug()  << "Graphics: Graphics " << _eglDisplay;
 }
 
 Graphics::~Graphics() {
-    if (_eglDisplay != EGL_NO_DISPLAY) {
-    	releaseGLContext();
-		if (_eglContext != EGL_NO_CONTEXT) {
-			eglDestroyContext(_eglDisplay, _eglContext);
-			_eglContext = EGL_NO_CONTEXT;
-		}
-		if (_eglSurface != EGL_NO_SURFACE) {
-			eglDestroySurface(_eglDisplay, _eglSurface);
-			_eglSurface = EGL_NO_SURFACE;
-		}
-    }
+	cleanup();
 }
 
 int Graphics::initialize(screen_window_t screenWindow)
 {
     EGLBoolean status;
+
+	qDebug()  << "Graphics::initialize: "<< _eglDisplay << ":" << _eglConfig << ":" << screenWindow;
 
 #ifdef GLES1
     _eglContext = eglCreateContext(_eglDisplay, _eglConfig, EGL_NO_CONTEXT, NULL);
@@ -75,6 +69,8 @@ int Graphics::initialize(screen_window_t screenWindow)
 #else
 #error libviews should be compiled with either GLES1 or GLES2 -D flags.
 #endif
+
+	qDebug()  << "Graphics::initialize:eglCreateContext "<< _eglContext << ":" << _eglDisplay << ":" << _eglConfig << ":" << screenWindow;
 
     if (_eglContext == EGL_NO_CONTEXT) {
 		eglPrintError("eglCreateContext");
@@ -166,6 +162,20 @@ int Graphics::initializeEGL() {
 	_eglInitialized = true;
 
     return EXIT_SUCCESS;
+}
+
+void Graphics::cleanup() {
+	if (_eglDisplay != EGL_NO_DISPLAY) {
+		releaseGLContext();
+		if (_eglContext != EGL_NO_CONTEXT) {
+			eglDestroyContext(_eglDisplay, _eglContext);
+			_eglContext = EGL_NO_CONTEXT;
+		}
+		if (_eglSurface != EGL_NO_SURFACE) {
+			eglDestroySurface(_eglDisplay, _eglSurface);
+			_eglSurface = EGL_NO_SURFACE;
+		}
+	}
 }
 
 void Graphics::cleanupEGL() {
@@ -329,6 +339,8 @@ void Graphics::unlockRendering()
 
 void Graphics::clear()
 {
+	//qDebug()  << "Graphics: clear";
+
 	lockRendering();
 
 	getGLContext();
@@ -668,15 +680,15 @@ int Graphics::createTexture2D(ImageData* image, int* width, int* height, float* 
 
 	if (image) {
 		//variables to pass to get info
-		int adjustWidth, adjustHeight;
-		PixelFormat::Type adjustFormat;
+		int textureWidth, textureHeight;
+		PixelFormat::Type textureFormat;
 		int texWidth, texHeight;
 
-		adjustWidth = image->width();
-		adjustHeight = image->height();
-		adjustFormat = image->format();
+		textureWidth = image->width();
+		textureHeight = image->height();
+		textureFormat = image->format();
 
-    	switch (adjustFormat)
+    	switch (textureFormat)
     	{
     		case PixelFormat::RGBA_Premultiplied:
     			format = GL_RGBA;
@@ -689,8 +701,8 @@ int Graphics::createTexture2D(ImageData* image, int* width, int* height, float* 
     			return EXIT_FAILURE;
     	}
 
-		texWidth = nextp2(adjustWidth);
-		texHeight = nextp2(adjustHeight);
+		texWidth = nextp2(textureWidth);
+		texHeight = nextp2(textureHeight);
 
 		getGLContext();
 
@@ -714,23 +726,23 @@ int Graphics::createTexture2D(ImageData* image, int* width, int* height, float* 
 			glTexImage2D(GL_TEXTURE_2D, 0, format, texWidth, texHeight, 0, format, GL_UNSIGNED_BYTE, NULL);
 		}
 
-		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, adjustWidth, adjustHeight, format, GL_UNSIGNED_BYTE, image->pixels());
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight, format, GL_UNSIGNED_BYTE, image->pixels());
 
 		GLint err = glGetError();
 	   if (err == 0) {
 			//Return physical with and height of texture if pointers are not null
 			if(width) {
-				*width = adjustWidth;
+				*width = textureWidth;
 			}
 			if (height) {
-				*height = adjustHeight;
+				*height = textureHeight;
 			}
 			//Return modified texture coordinates if pointers are not null
 			if(tex_x) {
-				*tex_x = ((float) adjustWidth - 0.5f) / ((float)texWidth);
+				*tex_x = ((float) textureWidth - 0.5f) / ((float)texWidth);
 			}
 			if(tex_y) {
-				*tex_y = ((float) adjustHeight - 0.5f) / ((float)texHeight);
+				*tex_y = ((float) textureHeight - 0.5f) / ((float)texHeight);
 			}
 
 			qDebug() << "Graphics::createTexture2D: result: " << width << ":" << height << ":" << *tex_x << ":" << *tex_y;

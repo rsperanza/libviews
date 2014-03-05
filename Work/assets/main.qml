@@ -126,7 +126,7 @@ TabbedPane {
 									legendTitleFontSize: 8
 									legendFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
 									legendFontSize: 8
-				            		legendPlacement: "top"
+				            		legendPlacement: "bottom"
 				            		
  				            		showSliceLabel: true
 									sliceLabelFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
@@ -375,8 +375,6 @@ TabbedPane {
 					                signatureContainer.signSheet.signatureImage.connect(onSignatureImage);
 					                signatureContainer.signSheet.signatureImageFileURL = "";
 					                signatureContainer.signSheet.closed.connect(signSheetClosed);
-					                //signatureContainer.signSheet.editPhotoData = photosPage.selectedData;
-					                //console.log("editPhotoData: " + photosPage.editSheet.editPhotoData);
 					                signatureContainer.signSheet.open();
 					                signatureContainer.signSheetOpen = true;
 					                signatureContainer.signSheet.readyForFocus = true;
@@ -399,8 +397,6 @@ TabbedPane {
 					                signatureContainer.signSheet.signatureImage.connect(onSignatureImage);
 					                signatureContainer.signSheet.signatureImageFileURL = "";
 					                signatureContainer.signSheet.closed.connect(signSheetClosed);
-					                //signatureContainer.signSheet.editPhotoData = photosPage.selectedData;
-					                //console.log("editPhotoData: " + photosPage.editSheet.editPhotoData);
 					                signatureContainer.signSheet.open();
 					                signatureContainer.signSheetOpen = true;
 					                signatureContainer.signSheet.readyForFocus = true;
@@ -451,6 +447,9 @@ TabbedPane {
     function signSheetClosed() {
         signatureContainer.signSheet.destroy();
         signatureContainer.signSheetOpen = false;
+        
+    	OrientationSupport.supportedDisplayOrientation =
+        SupportedDisplayOrientation.DisplayPortrait; 
     }
 		
     function onSignatureImage(imageUrl) {
@@ -458,7 +457,8 @@ TabbedPane {
         clickLabel.visible = false;
         signature.visible = true;
         signature.resetImage();
-        tracker.imageSource = imageUrl;
+        signature.imageSource = imageUrl;
+        //tracker.imageSource = imageUrl;
     }
 		            
 } // end of TabbedPane

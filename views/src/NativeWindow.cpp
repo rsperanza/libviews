@@ -47,7 +47,9 @@ NativeWindow::NativeWindow(ViewDisplay display) : _display(display)
 }
 
 NativeWindow::~NativeWindow() {
-	if (_screenWindow != NULL) {
+	if (_screenWindow) {
+    	qDebug()  << "NativeWindow::~NativeWindow: _screenWindow: " << ":" << _screenWindow;
+
 		screen_destroy_window(_screenWindow);
 		_screenWindow = NULL;
 	}

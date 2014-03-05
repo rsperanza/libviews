@@ -60,6 +60,7 @@ private slots:
 	void onGamepad(GamepadEvent *event);
 
 protected:
+	void addView(View* view);
 	void addViewToResize(View* view);
 	void addTouchEventView(View* view);
 
@@ -69,6 +70,7 @@ protected:
 
 	// main mutex for controlling view access
 	QMutex _viewsMutex;
+    QList<View*> _views;
     QList<View*> _viewsToResize;
     QList<View*> _touchEventViews;
 };

@@ -26,7 +26,7 @@ namespace views {
 
 View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(display)
 {
-	qDebug()  << "View: View ";
+	qDebug()  << "View: View " << display;
 
 	_enabled = false;
 	_initialized = false;
@@ -135,6 +135,8 @@ void View::cleanup() {
 }
 
 void View::setEnabled(bool enabled) {
+	qDebug()  << "View::setEnabled " << enabled;
+
 	_enabled = enabled;
 }
 
@@ -435,6 +437,7 @@ void View::renderView()
 		// if a Graphics class is registered, call it to render
 		if (_renderGraphics) {
 			_renderGraphics->renderSafe(_capture);
+			qDebug()  << "View::renderView: rendered ";
 
 			// after rendering this view is no longer stale
 			setStale(false);
@@ -461,9 +464,31 @@ void View::renderView()
 
 		//qDebug()  << "View::renderView: " << _renderCount << initialized() << " : " << enabled() << " : " << visible() << " : " << stale();
 	} else {
-		if (!visible()) {
-			_renderGraphics->clear();
+
+		if (!enabled() && _nativeWindow) {
+			//_renderGraphics->clear();
+			qDebug()  << "View::renderView: disabled " << _renderCount << initialized() << " : " << visible() << " : " << _nativeWindow;
+
+			Graphics::lockRendering();
+
+			if (_renderGraphics) {
+				_renderGraphics->regenerateCleanup();
+			}
+
+			Graphics::unlockRendering();
+
+			if (_renderGraphics) {
+				_renderGraphics->cleanup();
+			}
+
+			if (_nativeWindow) {
+				delete _nativeWindow;
+				_nativeWindow = NULL;
+			}
+
+			setInitialized(false);
 		}
+
 		// reset render count
 		_renderCount = 0;
 	}

@@ -62,6 +62,7 @@ public:
 	virtual void render() = 0;
 	virtual void clear();
 	virtual void renderSafe(bool saveRender);
+	virtual void cleanup();
 
 	void setSize(int width, int height);
 

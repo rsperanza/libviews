@@ -42,6 +42,7 @@ SignaturePad::SignaturePad(Container * parent) : ViewControl(parent)
 	_signPad->setTool("freedraw");
 	_signPad->setEnabled(false);
 
+	addView(_signPad);
 	addViewToResize(_signPad);
 	addTouchEventView(_signPad);
 

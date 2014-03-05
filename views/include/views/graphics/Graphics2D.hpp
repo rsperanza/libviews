@@ -62,7 +62,6 @@ typedef struct GLColor
 #define MAX_GLYPHS	65536
 
 typedef struct Font {
-	unsigned int fontTexture;
     float pt;
     int numberCharacters;
     int* charMap;
@@ -77,6 +76,8 @@ typedef struct Font {
     float *offsetX;
     float *offsetY;
 	int initialized;
+	unsigned int fontTexture;
+	ImageData* image;
 } Font;
 
 typedef struct Gradient
@@ -321,10 +322,10 @@ Q_OBJECT
 
 public:
 	Graphics2D(int display, Graphics2D* master = NULL);
-
 	virtual ~Graphics2D();
 
 	int initialize(screen_window_t screenWindow);
+	void cleanup();
 
 public Q_SLOTS:
 	// resets the context to a default state

@@ -60,6 +60,7 @@ ViewControl::~ViewControl() {
 	// clear lists
 	_viewsMutex.lock();
 
+	_views.clear();
 	_viewsToResize.clear();
 	_touchEventViews.clear();
 
@@ -74,11 +75,13 @@ void ViewControl::onEnabledChanged(bool enabled)
 
 	_viewsMutex.lock();
 
-	for(int index = 0; index < children().size(); index++) {
-		View* view = (View*)children()[index];
+	for(int index = 0; index < _views.size(); index++) {
+		View* view = (View*)_views[index];
 
 		if (view) {
 			view->setEnabled(enabled);
+			view->setAltered(true);
+			view->setStale(true);
 		}
 	}
 
@@ -91,11 +94,13 @@ void ViewControl::onVisibleChanged(bool visible)
 
 	_viewsMutex.lock();
 
-	for(int index = 0; index < children().size(); index++) {
-		View* view = (View*)children()[index];
+	for(int index = 0; index < _views.size(); index++) {
+		View* view = (View*)_views[index];
 
 		if (view) {
 			view->setEnabled(visible);
+			view->setAltered(true);
+			view->setStale(true);
 		}
 	}
 
@@ -112,6 +117,8 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 	if (!_childrenAdded) {
 		for(int index = 0; index < children().size(); index++) {
 			View* view = (View*)children()[index];
+
+			addView(view);
 
 			if (_viewsToResize.indexOf(view) < 0 && view->display() == DISPLAY_DEVICE) {
 				addViewToResize(view);
@@ -177,6 +184,7 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 				view->setPosition(controlFrame.x(), controlFrame.y());
 				view->setSize(controlFrame.width(), controlFrame.height());
 			}
+
 			view->setEnabled(true);
 			view->setAltered(true);
 			view->setStale(true);
@@ -190,6 +198,15 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 	}
 
 	_viewsMutex.unlock();
+}
+
+void ViewControl::addView(View* view)
+{
+	if (view) {
+		_views << view;
+
+		qDebug() << "ViewControl add view: " << view << "\n";
+	}
 }
 
 void ViewControl::addViewToResize(View* view)

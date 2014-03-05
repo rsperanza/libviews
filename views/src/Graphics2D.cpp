@@ -410,6 +410,8 @@ Graphics2D::Graphics2D(int display, Graphics2D* master) : Graphics(display, mast
 
 Graphics2D::~Graphics2D()
 {
+	cleanup();
+
 #ifdef GLES2
 	if (_transformMatrix) {
 		free(_transformMatrix);
@@ -465,6 +467,18 @@ Graphics2D::~Graphics2D()
 
 	if (_renderMaskTextureCoords) {
 		delete _renderMaskTextureCoords;
+	}
+}
+
+void Graphics2D::cleanup() {
+	QList<ImageData*> textureImages = _glTextureIDImageMap.keys();
+
+	if (_glTextureIDImageMap.size() > 0) {
+		do {
+			ImageData *image = textureImages[0];
+			_glTextureIDImageMap.take(image);
+			textureImages.removeAt(0);
+		} while (_glTextureIDImageMap.size() > 0);
 	}
 }
 
@@ -629,8 +643,6 @@ Font* Graphics2D::createFont(const QString& fontFileName, const QString* fontMet
     font->initialized = 0;
     font->pt = pointSize;
 
-    glGenTextures(1, &(font->fontTexture));
-
     // calculate the max number of characters in the font
     font->numberCharacters = 0;
     int glyphIndex;
@@ -772,13 +784,16 @@ Font* Graphics2D::createFont(const QString& fontFileName, const QString* fontMet
 
     int bitmap_offset_x = 0, bitmap_offset_y = 0;
 
-    GLubyte* fontTextureData = (GLubyte*) calloc(2 * fontTexWidth * fontTexHeight, sizeof(GLubyte));
+	font->image = new ImageData(bb::PixelFormat::RGBA_Premultiplied, fontTexWidth, fontTexHeight);
 
-    if (!fontTextureData) {
+    if (!font->image) {
     	qDebug() << "Graphics2D::createFont: Failed to allocate memory for font texture\n";
         free(font);
         return NULL;
     }
+
+    GLubyte* fontTextureData = (GLubyte*)font->image->pixels();
+    //GLubyte* fontTextureData = (GLubyte*) calloc(2 * fontTexWidth * fontTexHeight, sizeof(GLubyte));
 
     // Fill font texture bitmap with individual bmp data and record appropriate size, texture coordinates and offsets for every glyph
     for(c = 0; c < font->numberCharacters; c++) {
@@ -836,13 +851,16 @@ Font* Graphics2D::createFont(const QString& fontFileName, const QString* fontMet
     	}
 	}
 
-    glBindTexture(GL_TEXTURE_2D, font->fontTexture);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    /*
+    	glGenTextures(1, &(font->fontTexture));
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, fontTexWidth, fontTexHeight, 0, GL_LUMINANCE_ALPHA , GL_UNSIGNED_BYTE, fontTextureData);
+        glBindTexture(GL_TEXTURE_2D, font->fontTexture);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 
-    free(fontTextureData);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, fontTexWidth, fontTexHeight, 0, GL_LUMINANCE_ALPHA , GL_UNSIGNED_BYTE, fontTextureData);
+    */
+    //free(fontTextureData);
 
     FT_Done_Face(face);
     FT_Done_FreeType(library);
@@ -1148,15 +1166,37 @@ void Graphics2D::setFont(Font* font)
 {
 	//qDebug()  << "Graphics2D::setFont: " << font;
 
-	_master2D->_currentFont = font;
+	int returnCode = EXIT_SUCCESS;
 
-	_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+	if (!_glTextureIDImageMap.contains(font->image)) {
+		//returnCode = createTexture2D(font->image, NULL, NULL, &tex_x, &tex_y, &font->fontTexture);
 
-	_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = font;
+		glGenTextures(1, &(font->fontTexture));
 
-	_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+		glBindTexture(GL_TEXTURE_2D, font->fontTexture);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 
-	_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_FONT;
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE_ALPHA, font->image->width(), font->image->height(), 0, GL_LUMINANCE_ALPHA , GL_UNSIGNED_BYTE, font->image->pixels());
+
+		_glTextureIDImageMap.insert(font->image, font->fontTexture);
+	} else {
+		font->fontTexture = _glTextureIDImageMap.value(font->image);
+	}
+
+	if (EXIT_SUCCESS != returnCode) {
+		qDebug() << "Graphics2D::setFont: Unable to create texture\n";
+	} else {
+		_master2D->_currentFont = font;
+
+		_master2D->_drawPointerIndices[_master2D->_commandCount*2+0] = _master2D->_currentDrawPointerIndex;
+
+		_master2D->_drawPointers[_master2D->_currentDrawPointerIndex++] = font;
+
+		_master2D->_drawPointerIndices[_master2D->_commandCount*2+1] = _master2D->_currentDrawPointerIndex-1;
+
+		_master2D->_drawCommands[_master2D->_commandCount++] = RENDER_SET_FONT;
+	}
 }
 
 void Graphics2D::setGradient(Gradient* gradient)
@@ -2867,7 +2907,7 @@ void Graphics2D::renderDrawPolyline(int commandCount)
 			}
 		}
 
-		qDebug()  << "Graphics2D::renderDrawPolyline: : " << xPoints[0] << " " << yPoints[0]  << " " << xPoints[1] << " " << yPoints[1] << " "  << xPoints[2] << " " << yPoints[2]  << " " << xPoints[3]  << " " << xPoints[3];
+		//qDebug()  << "Graphics2D::renderDrawPolyline: : " << xPoints[0] << " " << yPoints[0]  << " " << xPoints[1] << " " << yPoints[1] << " "  << xPoints[2] << " " << yPoints[2]  << " " << xPoints[3]  << " " << xPoints[3];
 
 		if (fabs(dy) > fabs(dx)) {
 			_renderVertexCoords[renderIndex*8+0] = (GLfloat)xPoints[3];
