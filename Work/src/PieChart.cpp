@@ -33,6 +33,7 @@ PieChart::PieChart(ViewDisplay display) : View(display)
 	// disable text by default
 	_showCaption = false;
 	_showLegend = false;
+	_showLegendTitle = false;
 	_showSliceLabel = false;
 
     _leftPadding = 0.0;
@@ -44,6 +45,7 @@ PieChart::PieChart(ViewDisplay display) : View(display)
 
 	_itemColors = NULL;
 	_itemPercentages = NULL;
+	_itemQuantities = NULL;
 	_itemGradients = NULL;
 
 	_defaultStroke = _graphics2D->createStroke(3.0);
@@ -165,15 +167,22 @@ void PieChart::onRegenerated()
 
 			_graphics2D->setFont(_legendTitleFont);
 			_graphics2D->measureString(legendTitle, &textWidth, &textHeight);
+
 			maxTitleHeight = textHeight;
+
+			_graphics2D->setFont(_legendFont);
+			_graphics2D->measureString(legendTitle, &textWidth, &textHeight);
+
+			_legendItemHeight = textHeight;
+			_legendItemBoxSize = _legendItemHeight;
 
 			if (_legendPlacement == "left" || _legendPlacement == "right") {
 				_graphics2D->setFont(_legendFont);
 				for(int index = 0; index < _itemLabels.size(); index++) {
 					_graphics2D->measureString(_itemLabels[index].toString(), &textWidth, &textHeight);
 
-					textWidth += 60.0;
-					textHeight += 20.0;
+					textWidth += _legendItemBoxSize + 20.0;
+					textHeight += 5.0;
 
 					if (textWidth > maxItemWidth) {
 						maxItemWidth = textWidth;
@@ -191,8 +200,8 @@ void PieChart::onRegenerated()
 				for(int index = 0; index < _itemLabels.size(); index++) {
 					_graphics2D->measureString(_itemLabels[index].toString(), &textWidth, &textHeight);
 
-					textWidth += 60.0;
-					textHeight += 20.0;
+					textWidth += _legendItemBoxSize + 20.0;
+					textHeight += 5.0;
 
 					if (textWidth > maxItemWidth) {
 						maxItemWidth = textWidth;
@@ -237,50 +246,71 @@ void PieChart::onRegenerated()
 				availWidth -= maxItemWidth;
 			} else
 			if (_legendPlacement == "top") {
-				availHeight -= maxTitleHeight + rows * maxItemHeight;
+				if (_showLegendTitle) {
+					availHeight -= maxTitleHeight + rows * maxItemHeight;
+				} else {
+					availHeight -= rows * maxItemHeight;
+				}
 			} else
 			if (_legendPlacement == "bottom") {
-				availHeight -= maxTitleHeight + rows * maxItemHeight;
-				availY += maxTitleHeight + rows * maxItemHeight + 10.0;
+				if (_showLegendTitle) {
+					availHeight -= maxTitleHeight + rows * maxItemHeight;
+					availY += maxTitleHeight + rows * maxItemHeight;
+				} else {
+					availHeight -= rows * maxItemHeight;
+					availY += rows * maxItemHeight;
+				}
 			}
 
 			if (_legendPlacement == "left") {
-				_legendTitleX = availX;
-				_legendTitleY = availY + availHeight - maxTitleHeight;
-				_legendTopItemX = availX;
-				_legendTopItemY = availY + availHeight - maxTitleHeight - maxItemHeight;
-				_legendItemBoxSize = 50.0;
-				_legendItemHeight = maxItemHeight - 10.0;
+				if (_showLegendTitle) {
+					_legendTitleX = availX;
+					_legendTitleY = availY + availHeight - maxTitleHeight;
+					_legendTopItemX = availX;
+					_legendTopItemY = availY + availHeight - maxTitleHeight - maxItemHeight;
+				} else {
+					_legendTopItemX = availX;
+					_legendTopItemY = availY + availHeight;
+				}
 			} else
 			if (_legendPlacement == "right") {
-				_legendTitleX = availX + availWidth - maxItemWidth;
-				_legendTitleY = availY + availHeight - maxTitleHeight;
-				_legendTopItemX = availX + availWidth - maxItemWidth;
-				_legendTopItemY = availY + availHeight - maxTitleHeight - maxItemHeight;
-				_legendItemBoxSize = 50.0;
-				_legendItemHeight = maxItemHeight - 10.0;
+				if (_showLegendTitle) {
+					_legendTitleX = availX + availWidth - maxItemWidth;
+					_legendTitleY = availY + availHeight - maxTitleHeight;
+					_legendTopItemX = availX + availWidth - maxItemWidth;
+					_legendTopItemY = availY + availHeight - maxTitleHeight - maxItemHeight;
+				} else {
+					_legendTopItemX = availX + availWidth - maxItemWidth;
+					_legendTopItemY = availY + availHeight;
+				}
 			} else
 			if (_legendPlacement == "top") {
-				_legendTitleX = availX;
-				_legendTitleY = _bottomPadding + availHeight - maxTitleHeight;
-				_legendTopItemX = availX;
-				_legendTopItemY = _bottomPadding + availHeight - maxTitleHeight - maxItemHeight;
-				_legendItemBoxSize = 50.0;
-				_legendItemHeight = maxItemHeight - 10.0;
+				if (_showLegendTitle) {
+					_legendTitleX = availX;
+					_legendTitleY = _bottomPadding + availHeight - maxTitleHeight;
+					_legendTopItemX = availX;
+					_legendTopItemY = _bottomPadding + availHeight - maxTitleHeight - maxItemHeight;
+				} else {
+					_legendTopItemX = availX;
+					_legendTopItemY = _bottomPadding + availHeight;
+				}
 			} else
 			if (_legendPlacement == "bottom") {
-				_legendTitleX = availX;
-				_legendTitleY = _bottomPadding + maxTitleHeight + rows * maxItemHeight;
-				_legendTopItemX = availX;
-				_legendTopItemY = _bottomPadding + (rows-1) * maxItemHeight;
-				_legendItemBoxSize = 50.0;
-				_legendItemHeight = maxItemHeight - 10.0;
+				if (_showLegendTitle) {
+					_legendTitleX = availX;
+					_legendTitleY = _bottomPadding + maxTitleHeight + rows * maxItemHeight;
+					_legendTopItemX = availX;
+					_legendTopItemY = _bottomPadding + (rows-1) * maxItemHeight;
+				} else {
+					_legendTopItemX = availX;
+					_legendTopItemY = _bottomPadding + rows * maxItemHeight;
+				}
 			}
 
-
-
-			_graphics2D->setFont(_legendTitleFont);
-			_graphics2D->drawString(legendTitle, _legendTitleX, _legendTitleY);
+			if (_showLegendTitle) {
+				_graphics2D->setFont(_legendTitleFont);
+				_graphics2D->drawString(legendTitle, _legendTitleX, _legendTitleY);
+			}
 
 			_graphics2D->setFont(_legendFont);
 
@@ -298,7 +328,7 @@ void PieChart::onRegenerated()
 				_graphics2D->setStroke(_thinStroke);
 				_graphics2D->drawRect(_legendTopItemX + column * maxItemWidth, _legendTopItemY - row * maxItemHeight, _legendItemBoxSize, _legendItemHeight);
 
-				_graphics2D->drawString(_itemLabels[index].toString(), _legendTopItemX + column * maxItemWidth + _legendItemBoxSize + 10.0, _legendTopItemY - row * maxItemHeight + 10.0);
+				_graphics2D->drawString(_itemLabels[index].toString(), _legendTopItemX + column * maxItemWidth + _legendItemBoxSize + 10.0, _legendTopItemY - row * maxItemHeight);
 
 				if (_legendPlacement == "left" || _legendPlacement == "right") {
 					row++;
@@ -318,15 +348,25 @@ void PieChart::onRegenerated()
 				_sliceLabelFont = _graphics2D->createFont(_sliceLabelFontFile, NULL, _sliceLabelFontSize, calculateDPI(), new QString("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-,%0123456789 eE"));
 			}
 
-			_graphics2D->setFont(_sliceLabelFont);
-			_graphics2D->measureString("100.0 %", &textWidth, &textHeight);
+			bool externalLabels = false;
+			for(int index = 0; index < _itemValuesList.size(); index++) {
+				if (_itemPercentages[index] * 360.0 < 30.0) {
+					externalLabels = true;
+					break;
+				}
+			}
 
-			if (_sliceLabelPlacement == "vertical") {
-				availHeight -= (textHeight * 2.5);
-				availY += textHeight * 1.25;
-			} else if (_sliceLabelPlacement == "horizontal") {
-				availWidth -= (textWidth * 2.5);
-				availX += textWidth * 1.25;
+			_graphics2D->setFont(_sliceLabelFont);
+			_graphics2D->measureString("100.0", &textWidth, &textHeight);
+
+			if (externalLabels) {
+				if (_sliceLabelPlacement == "vertical") {
+					availHeight -= (textHeight * 2.5);
+					availY += textHeight * 1.25;
+				} else if (_sliceLabelPlacement == "horizontal") {
+					availWidth -= (textWidth * 2.5);
+					availX += textWidth * 1.25;
+				}
 			}
 		}
 
@@ -385,16 +425,24 @@ void PieChart::onRegenerated()
 
 			if (_showSliceLabel) {
 				QString qtyText("");
-				qtyText.append(QString::number(_itemPercentages[index] * 100.0, 'g', 3));
-				qtyText.append(" %");
+				qtyText.append(QString::number(_itemQuantities[index], 'g', 3));
+				qtyText.append(" ");
+				qtyText.append(_sliceLabelUnitLabel);
 
 				if (sliceAngle > 30.0) {
-					if (_itemColors[index*2].green > 0.2) {
-						_graphics2D->setColor(COLOR_BLACK);
+					if (_itemGradients) {
+						if (_itemColors[index*2].green > 0.2) {
+							_graphics2D->setColor(COLOR_BLACK);
+						} else {
+							_graphics2D->setColor(COLOR_WHITE);
+						}
 					} else {
-						_graphics2D->setColor(COLOR_WHITE);
+						if (_itemColors[index].green > 0.2) {
+							_graphics2D->setColor(COLOR_BLACK);
+						} else {
+							_graphics2D->setColor(COLOR_WHITE);
+						}
 					}
-
 					_graphics2D->setFont(_sliceLabelFont);
 					_graphics2D->measureString(qtyText, &textWidth, &textHeight);
 					_graphics2D->drawString(qtyText, _pieCenterX + cos(labelAngle * M_PI / 180.0) * _pieRadius *.6 - textWidth / 2.0,
@@ -533,14 +581,15 @@ void PieChart::onRegenerated()
 
 					_graphics2D->measureString(qtyText, &textWidth, &textHeight);
 
+					_graphics2D->setColor(COLOR_BLACK);
 					if (_sliceLabelPlacement == "vertical") {
 						_graphics2D->setStroke(_thinStroke);
 						double* lineX = new double[3] {
-							(_pieCenterX + cos(labelAngle * M_PI / 180.0) * _pieRadius * 0.6),
+							(_pieCenterX + cos(labelAngle * M_PI / 180.0) * _pieRadius * 0.9),
 							(_pieCenterX + cos(labelAngle * M_PI / 180.0) * _pieRadius * 1.05),
 							(externLabelX[index] + 10.0 + externLabelWidth[index] / 2.0) };
 						double* lineY = new double[3] {
-							(_pieCenterY + sin(labelAngle * M_PI / 180.0) * _pieRadius * 0.6),
+							(_pieCenterY + sin(labelAngle * M_PI / 180.0) * _pieRadius * 0.9),
 							(_pieCenterY + sin(labelAngle * M_PI / 180.0) * _pieRadius * 1.05),
 							(externLabelY[index] - 5.0) };
 
@@ -776,6 +825,11 @@ bool PieChart::showLegend()
 	return _showLegend;
 }
 
+bool PieChart::showLegendTitle()
+{
+	return _showLegendTitle;
+}
+
 
 void PieChart::setLegendTitleFont(QString legendTitleFont)
 {
@@ -807,6 +861,11 @@ void PieChart::setShowLegend(bool showLegend)
 	_showLegend = showLegend;
 }
 
+void PieChart::setShowLegendTitle(bool showLegendTitle)
+{
+	_showLegendTitle = showLegendTitle;
+}
+
 
 bool PieChart::showSliceLabel()
 {
@@ -816,6 +875,11 @@ bool PieChart::showSliceLabel()
 QString PieChart::sliceLabelPlacement()
 {
 	return _sliceLabelPlacement;
+}
+
+QString PieChart::sliceLabelUnitLabel()
+{
+	return _sliceLabelUnitLabel;
 }
 
 QString PieChart::sliceLabelFont()
@@ -837,6 +901,11 @@ void PieChart::setShowSliceLabel(bool showSliceLabel)
 void PieChart::setSliceLabelPlacement(QString sliceLabelPlacement)
 {
 	_sliceLabelPlacement = sliceLabelPlacement;
+}
+
+void PieChart::setSliceLabelUnitLabel(QString sliceLabelUnitLabel)
+{
+	_sliceLabelUnitLabel = sliceLabelUnitLabel;
 }
 
 void PieChart::setSliceLabelFont(QString sliceLabelFont)
@@ -870,6 +939,14 @@ void PieChart::setItemColors(QVariantList itemColors)
 
 	if (_itemColors) {
 		delete _itemColors;
+
+		_itemColors = NULL;
+	}
+
+	if (_itemGradients) {
+		delete _itemGradients;
+
+		_itemGradients = NULL;
 	}
 
 	if (itemColors.size() > 0) {
@@ -906,10 +983,23 @@ void PieChart::setItemValues(QVariantList itemValues)
 		delete _itemPercentages;
 	}
 
+	if (_itemQuantities) {
+		delete _itemQuantities;
+	}
+
 	if (itemValues.size() > 0) {
+		_itemQuantities = new double[itemValues.size()];
+
+		double itemsTotal = 0.0;
+		for(int index = 0; index < itemValues.size(); index++) {
+			_itemQuantities[index] = itemValues[index].value<qreal>();
+
+			itemsTotal += _itemQuantities[index];
+		}
+
 		_itemPercentages = new double[itemValues.size()];
 		for(int index = 0; index < itemValues.size(); index++) {
-			_itemPercentages[index] = itemValues[index].value<qreal>();
+			_itemPercentages[index] = itemValues[index].value<qreal>() / itemsTotal;
 		}
 	}
 }

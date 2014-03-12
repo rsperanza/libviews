@@ -1,10 +1,24 @@
 import bb.cascades 1.0
 import views 1.0
 import com.example.views 1.0
-   
+
 TabbedPane {
     id: tabbedPane
     showTabsOnActionBar: true
+
+	property variant colorRed:          Color.create( 1.0, 0.0, 0.0, 1.0 )
+	property variant colorRedShaded:    Color.create( 0.75, 0.0, 0.0, 1.0 ) 
+	property variant colorGreen:        Color.create( 0.0, 1.0, 0.0, 1.0 )
+	property variant colorGreenShaded:  Color.create( 0.0, 0.75, 0.0, 1.0 )
+	property variant colorBlue:         Color.create( 0.0, 0.0, 1.0, 1.0 )
+	property variant colorBlueShaded:   Color.create( 0.0, 0.0, 0.75, 1.0 )
+	property variant colorYellow:       Color.create( 1.0, 1.0, 0.0, 1.0 )
+	property variant colorYellowShaded: Color.create( 1.0, 0.75, 0.0, 1.0 )
+	property variant colorViolet:       Color.create( 1.0, 0.0, 1.0, 1.0 )
+	property variant colorVioletShaded: Color.create( 0.75, 0.0, 0.75, 1.0 )
+	property variant colorCyan:         Color.create( 0.0, 1.0, 1.0, 1.0 )
+	property variant colorCyanShaded:   Color.create( 0.0, 0.75, 0.75, 1.0 )				            		
+
     
     Tab {
 		title: "Graphs and Charts"
@@ -95,6 +109,57 @@ TabbedPane {
 				            horizontalAlignment: HorizontalAlignment.Fill
 				            
 				            attachedObjects: [
+/*  
+				            	PieChart {
+				            		id: pieChart
+				            		
+									windowID: "pieChart1"
+									z: -1
+									x: 0
+									y: 0
+									width: 360
+									height: 360
+									enabled: false
+									
+									leftPadding: 5
+									rightPadding: 5
+									topPadding: 5
+									bottomPadding: 5
+									
+									showCaption: true
+									caption: "Sample Pie Chart"
+									captionFont: "/usr/fonts/font_repository/monotype/georgiab.ttf"
+									captionFontSize: 6
+									//subCaption: "for today"
+									//subCaptionFont: "/usr/fonts/font_repository/monotype/ariali.ttf"
+									//subCaptionFontSize: 5
+									captionPlacement: "top"
+									captionAlignment: "center"
+				            			
+				            		showLegend: true
+				            		showLegendTitle: false
+									legendTitleFont: "/usr/fonts/font_repository/monotype/SlatePro.ttf"
+									legendTitleFontSize: 6
+									legendFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
+									legendFontSize: 6
+				            		legendPlacement: "bottom"
+				            		
+ 				            		showSliceLabel: true
+									sliceLabelFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
+									sliceLabelFontSize: 6
+				            		sliceLabelPlacement: "vertical"
+				            		sliceLabelUnitLabel: "MB"
+				            						            		
+ 				            		itemLabels: [ "Used", "Free" ]
+				            		itemValues: [ 15.0, 5.0 ]
+				            		itemColors: [ 
+				            				colorRed, 
+				            				colorRedShaded, 
+				            				colorGreen, 
+				            				colorGreenShaded, 
+				            			]
+				            	}
+*/          
 				            	PieChart {
 				            		id: pieChart
 				            		
@@ -122,6 +187,7 @@ TabbedPane {
 									captionAlignment: "center"
 				            			
 				            		showLegend: true
+				            		showLegendTitle: true
 									legendTitleFont: "/usr/fonts/font_repository/monotype/SlatePro.ttf"
 									legendTitleFontSize: 8
 									legendFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
@@ -132,33 +198,27 @@ TabbedPane {
 									sliceLabelFont: "/usr/fonts/font_repository/monotype/SlatePro-Light.ttf"
 									sliceLabelFontSize: 8
 				            		sliceLabelPlacement: "vertical"
-				            		
+				            						            		
  				            		itemLabels: [ "item 1", "item 2", "item 3", "item 4", "item 5", "item 6" ]
-				            		itemValues: [ 0.16666, 0.13888, 0.08333, 0.19444, 0.05555, 0.36144 ]
+				            		itemValues: [ 16.666, 13.888, 8.333, 19.444, 5.555, 36.144 ]
 				            		itemColors: [ 
-				            				Color.create( 1.0, 0.0, 0.0, 1.0 ), 
-				            				Color.create( 0.75, 0.0, 0.0, 1.0 ), 
-				            				Color.create( 0.0, 1.0, 0.0, 1.0 ), 
-				            				Color.create( 0.0, 0.75, 0.0, 1.0 ), 
-				            				Color.create( 0.0, 0.0, 1.0, 1.0 ), 
-				            				Color.create( 0.0, 0.0, 0.75, 1.0 ), 
-				            				Color.create( 1.0, 1.0, 0.0, 1.0 ), 
-				            				Color.create( 1.0, 0.75, 0.0, 1.0 ), 
-				            				Color.create( 1.0, 0.0, 1.0, 1.0 ), 
-				            				Color.create( 0.75, 0.0, 0.75, 1.0 ), 
-				            				Color.create( 0.0, 1.0, 1.0, 1.0 ),
-				            				Color.create( 0.0, 0.75, 0.75, 1.0 )
+				            				colorRed, 
+				            				colorRedShaded, 
+				            				colorGreen, 
+				            				colorGreenShaded, 
+				            				colorBlue, 
+				            				colorBlueShaded, 
+				            				colorYellow, 
+				            				colorYellowShaded, 
+				            				colorViolet, 
+				            				colorVioletShaded, 
+				            				colorCyan,
+				            				colorCyanShaded
 				            			]
-/*
-				            				Color.create( 1.0, 0.0, 0.0, 1.0 ), 
-				            				Color.create( 0.0, 1.0, 0.0, 1.0 ), 
-				            				Color.create( 0.0, 0.0, 1.0, 1.0 ), 
-				            				Color.create( 1.0, 1.0, 0.0, 1.0 ), 
-				            				Color.create( 1.0, 0.0, 1.0, 1.0 ), 
-				            				Color.create( 0.0, 1.0, 1.0, 1.0 )
-*/
 				            	}
-/*            
+
+
+/*
 				            	LineGraph {
 				            		id: lineGraph
 				            		

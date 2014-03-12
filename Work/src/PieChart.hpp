@@ -60,8 +60,10 @@ Q_PROPERTY(QString legendFont READ legendFont WRITE setLegendFont)
 Q_PROPERTY(qreal  legendFontSize  READ legendFontSize WRITE setLegendFontSize)
 Q_PROPERTY(QString legendPlacement READ legendPlacement WRITE setLegendPlacement)
 Q_PROPERTY(bool showLegend READ showLegend WRITE setShowLegend)
+Q_PROPERTY(bool showLegendTitle READ showLegendTitle WRITE setShowLegendTitle)
 
 Q_PROPERTY(bool showSliceLabel READ showSliceLabel WRITE setShowSliceLabel)
+Q_PROPERTY(QString sliceLabelUnitLabel READ sliceLabelUnitLabel WRITE setSliceLabelUnitLabel)
 Q_PROPERTY(QString sliceLabelPlacement READ sliceLabelPlacement WRITE setSliceLabelPlacement)
 Q_PROPERTY(QString sliceLabelFont READ sliceLabelFont WRITE setSliceLabelFont)
 Q_PROPERTY(qreal  sliceLabelFontSize  READ sliceLabelFontSize WRITE setSliceLabelFontSize)
@@ -102,8 +104,10 @@ public:
 	qreal  legendFontSize();
 	QString legendPlacement();
 	bool showLegend();
+	bool showLegendTitle();
 
 	bool showSliceLabel();
+	QString sliceLabelUnitLabel();
 	QString sliceLabelPlacement();
 	QString sliceLabelFont();
 	qreal  sliceLabelFontSize();
@@ -141,9 +145,11 @@ public Q_SLOTS:
 	void setLegendFontSize(qreal  legendFontSize);
 	void setLegendPlacement(QString legendPlacement);
 	void setShowLegend(bool showLegend);
+	void setShowLegendTitle(bool showLegendTitle);
 
 	void setShowSliceLabel(bool showSliceLabel);
 	void setSliceLabelPlacement(QString sliceLabelPlacement);
+	void setSliceLabelUnitLabel(QString sliceLabelUnitLabel);
 	void setSliceLabelFont(QString sliceLabelFont);
 	void setSliceLabelFontSize(qreal  sliceLabelFontSize);
 
@@ -185,6 +191,7 @@ private:
 
 	GLColor*      _itemColors;
 	double*		  _itemPercentages;
+	double*		  _itemQuantities;
 	Gradient**    _itemGradients;
 
 	QString      _caption;
@@ -207,9 +214,11 @@ private:
 	Font*        _legendFont;
 	QString      _legendPlacement;
 	bool         _showLegend;
+	bool         _showLegendTitle;
 
 	bool         _showSliceLabel;
 	QString      _sliceLabelPlacement;
+	QString      _sliceLabelUnitLabel;
 	QString      _sliceLabelFontFile;
 	double       _sliceLabelFontSize;
 	Font*        _sliceLabelFont;
