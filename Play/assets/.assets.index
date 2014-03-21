@@ -1,5 +1,5 @@
 1
-9
+12
 images/DSC_0080.jpg
 images/DSC_0081.jpg
 images/handle_inactive.png
@@ -7,5 +7,8 @@ images/handle_pressed.png
 images/IMG_00000005.jpg
 images/IMG_00000010.jpg
 main.qml
-media/pb_sample.mp4
+media/Demo_1080i_CC.ts
 media/VID_00000007.mp4
+media/waterfall_sample.ttml
+media/waterfallVideo.mov
+media/waterfallVideo_CC.mov

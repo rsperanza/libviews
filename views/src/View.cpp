@@ -97,10 +97,12 @@ int View::initialize()
     returnCode = _nativeWindow->initialize(_createFullWindow);
     if (returnCode == EXIT_SUCCESS) {
     	_screenWindow = _nativeWindow->getScreenWindow();
+		qDebug() << "VideoView::initialize: video_window: " << (int)_screenWindow;
 
         if (_renderGraphics) {
-        	returnCode = _renderGraphics->initialize(_nativeWindow->getScreenWindow());
+        	returnCode = _renderGraphics->initialize(_screenWindow);
         }
+
 	    if (returnCode == EXIT_SUCCESS) {
 	    	setInitialized(true);
 	    }

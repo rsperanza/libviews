@@ -28,7 +28,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QString>
 
-#include "views/views.hpp"
+#include "views/Views.hpp"
 
 using namespace views::base;
 using namespace views::graphics;

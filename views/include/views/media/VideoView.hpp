@@ -55,12 +55,15 @@ class Q_DECL_EXPORT VideoView : public View {
 
 Q_OBJECT
 
-Q_PROPERTY(QString mediaURL     READ mediaURL     WRITE setMediaURL)
-Q_PROPERTY(bool playing      READ playing)
-Q_PROPERTY(int leftPadding   READ leftPadding   WRITE setLeftPadding)
-Q_PROPERTY(int rightPadding  READ rightPadding  WRITE setRightPadding)
-Q_PROPERTY(int topPadding    READ topPadding    WRITE setTopPadding)
-Q_PROPERTY(int bottomPadding READ bottomPadding WRITE setBottomPadding)
+Q_PROPERTY(QString mediaURL        READ mediaURL        WRITE setMediaURL)
+Q_PROPERTY(bool playing            READ playing)
+Q_PROPERTY(bool showCaptions       READ showCaptions    WRITE setShowCaptions)
+Q_PROPERTY(QString captionFileURL  READ captionFileURL  WRITE setCaptionFileURL)
+
+Q_PROPERTY(int leftPadding         READ leftPadding     WRITE setLeftPadding)
+Q_PROPERTY(int rightPadding        READ rightPadding    WRITE setRightPadding)
+Q_PROPERTY(int topPadding          READ topPadding      WRITE setTopPadding)
+Q_PROPERTY(int bottomPadding       READ bottomPadding   WRITE setBottomPadding)
 
 public:
 	VideoView(ViewDisplay display = DISPLAY_DEVICE);
@@ -70,6 +73,9 @@ public:
 	QString mediaURL();
 
 	bool playing();
+
+	bool showCaptions();
+	QString captionFileURL();
 
 	int leftPadding();
 	int rightPadding();
@@ -88,6 +94,9 @@ public Q_SLOTS:
 	void setMediaURL(QString mediaURL);
 	void setMediaSize(int width, int height);
 
+	void setShowCaptions(bool showCaptions);
+	void setCaptionFileURL(QString captionFileURL);
+
 	void setLeftPadding(int leftPadding);
 	void setRightPadding(int rightPadding);
 	void setTopPadding(int topPadding);
@@ -103,6 +112,7 @@ protected:
 	void mmrCleanup();
 
 	strm_dict_t* calculateRect(int x, int y, int width, int height);
+	strm_dict_t* getCaptionParams();
 	virtual void handleScreenEvent(bps_event_t *event);
 
     QString _backupGroup;
@@ -114,9 +124,13 @@ protected:
     // I/O variables
     int  _videoDeviceOutputID;
     int  _audioDeviceOutputID;
+    int  _captionDeviceOutputID; // CAPTIONS
+    int  _captionExternalDeviceInputID; // SMPTE-TT CODE
 
-    QString videoDeviceUrl;
-    QString audioDeviceUrl;
+    QString _videoDeviceUrl;
+    QString _audioDeviceUrl;
+    QString _captionDeviceUrl;
+    QUrl _captionFileUrl;
 
     // Name of video context
     QString videoContextName;
@@ -131,7 +145,10 @@ protected:
     int _bottomPadding;
 
     bool _playing;
+    bool _showCaptions;
 
+	NativeWindow* _videoCCWindow;
+	screen_window_t _screenVideoCCWindow;
 	screen_window_t _screenVideoWindow;
 
 	Graphics2D* _graphics2D;

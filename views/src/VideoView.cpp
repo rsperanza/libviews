@@ -34,6 +34,9 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 	_mmrConnection = 0;
 	_mmrContext = 0;
 	_screenVideoWindow = 0;
+	_screenVideoCCWindow = 0;
+	_videoCCWindow = NULL;
+
 	_playing = false;
 
     _leftPadding = 0;
@@ -44,6 +47,8 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 	// I/O variables
 	_videoDeviceOutputID = -1;
 	_audioDeviceOutputID = -1;
+	_captionDeviceOutputID = -1;
+	_captionExternalDeviceInputID = -1;
 
 	_transparency = SCREEN_TRANSPARENCY_SOURCE_OVER;
 
@@ -54,6 +59,10 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 
 VideoView::~VideoView() {
 	// TODO Auto-generated destructor stub
+	if (_videoCCWindow) {
+		delete _videoCCWindow;
+		_videoCCWindow = NULL;
+	}
 }
 
 int VideoView::initialize() {
@@ -94,6 +103,97 @@ void VideoView::cleanup()
 	View::cleanup();
 }
 
+
+/*
+ * Display the video full screen
+ */
+strm_dict_t* VideoView::getCaptionParams() {
+	char buffer[16];
+	strm_dict_t *dict = strm_dict_new();
+
+	dict = strm_dict_set(dict, "subpicture_url", _captionFileUrl.toString().toAscii().data());
+	if (NULL == dict)
+		goto fail;
+
+	return dict;
+
+fail:
+	strm_dict_destroy(dict);
+	return NULL;
+}
+
+/*
+ * Display the video full screen
+ */
+strm_dict_t* VideoView::calculateRect(int x, int y, int width, int height) {
+    const int image_width = _mediaWidth;
+    const int image_height = _mediaHeight;
+    const float image_aspect = (float)image_width / (float)image_height;
+    const float aspect_tolerance = 0.1;
+    float screen_aspect = (float)width / (float)height;
+
+    char buffer[16];
+    strm_dict_t *dict = strm_dict_new();
+
+    if (NULL == dict) {
+        return NULL;
+    }
+
+    //fullscreen is the default.
+    dict = strm_dict_set(dict, "video_dest_x", "0");
+    if (NULL == dict)
+        goto fail;
+    dict = strm_dict_set(dict, "video_dest_y", "0");
+    if (NULL == dict)
+        goto fail;
+    dict = strm_dict_set(dict, "video_dest_w", itoa(width, buffer, 10));
+    if (NULL == dict)
+        goto fail;
+    dict = strm_dict_set(dict, "video_dest_h", itoa(height, buffer, 10));
+    if (NULL == dict)
+        goto fail;
+
+    if (fabs(screen_aspect - image_aspect) < aspect_tolerance) {
+        //if the screen is at almost the same aspect as the video, just
+        //do full screen.  Nothing to do here.  Fall through and return
+        //full screen.
+    } else if (screen_aspect < image_aspect) {
+        /* The screen is too tall.  We need to centre top to bottom, set the
+         * width the same as the screen's while maintaining the same aspect
+         * ratio.
+         */
+        dict = strm_dict_set(dict, "video_dest_y", itoa((height - image_height) / 2, buffer, 10));
+        if (NULL == dict)
+            goto fail;
+
+        height = width / image_aspect;
+
+        dict = strm_dict_set(dict, "video_dest_h", itoa(height, buffer, 10));
+        if (NULL == dict)
+            goto fail;
+    } else {
+        /* The screen is too wide.  We need to centre left to right, set the
+         * height the same as the screen's while maintaining the same aspect
+         * ratio.
+         */
+        dict = strm_dict_set(dict, "video_dest_x", itoa((width - image_width) / 2, buffer, 10));
+        if (NULL == dict)
+            goto fail;
+
+        width = height * image_aspect;
+
+        dict = strm_dict_set(dict, "video_dest_w", itoa(width, buffer, 10));
+        if (NULL == dict)
+            goto fail;
+    }
+
+    return dict;
+
+fail:
+    strm_dict_destroy(dict);
+    return NULL;
+}
+
 void VideoView::mmrInitialize()
 {
 	qDebug()  << "VideoView::mmrInitialize";
@@ -110,29 +210,65 @@ void VideoView::mmrInitialize()
         _mmrContext = mmr_context_create(_mmrConnection, videoContextName.toAscii().constData(), 0, S_IRWXU|S_IRWXG|S_IRWXO);
         if (_mmrContext) {
         	// I/O devices
-        	QString videoDeviceUrl = "screen:?nodstviewport=1&winid=";
-        	//QString videoDeviceUrl = "screen:?winid=";
-        	videoDeviceUrl += _id;
-        	videoDeviceUrl += "&wingrp=";
-        	videoDeviceUrl += _group;
-        	QString audioDeviceUrl = "audio:default";
+        	QString _videoDeviceUrl = "screen:?nodstviewport=1&winid=";
+        	_videoDeviceUrl += _id;
+        	_videoDeviceUrl += "&wingrp=";
+        	_videoDeviceUrl += _group;
+
+        	QString _audioDeviceUrl = "audio:default";
 
         	qDebug()  << "VideoView::mmrInitialize: _mediaURL: " << _mediaURL.toString().toAscii().constData();
-        	qDebug()  << "VideoView::mmrInitialize: videoDeviceUrl: " << videoDeviceUrl.toAscii().constData();
-        	qDebug()  << "VideoView::mmrInitialize: audioDeviceUrl: " << audioDeviceUrl.toAscii().constData();
+        	qDebug()  << "VideoView::mmrInitialize: videoDeviceUrl: " << _videoDeviceUrl.toAscii().constData();
+        	qDebug()  << "VideoView::mmrInitialize: _audioDeviceUrl: " << _audioDeviceUrl.toAscii().constData();
+
+        	if (_showCaptions) {
+            	_captionDeviceUrl = "screen:?nodstviewport=1&winid=";
+            	_captionDeviceUrl += QString("CC_").append(_id);
+            	_captionDeviceUrl += "&wingrp=";
+            	_captionDeviceUrl += _group;
+                _captionDeviceUrl += "&ymmf.VideoWriterDisplayIndex=0";  //CAPTIONS;
+            	qDebug()  << "VideoView::mmrInitialize: captionDeviceUrl: " << _captionDeviceUrl.toAscii().constData();
+
+            	if (_captionFileUrl.toString(QUrl::None).size() > 0) {
+    	        	qDebug()  << "VideoView::mmrInitialize: _captionFileUrl: " <<  _captionFileUrl.toString(QUrl::None).toAscii().constData();
+    			}
+        	}
 
         	/*
         	 * Configure video and audio output.
         	 */
-        	_videoDeviceOutputID = mmr_output_attach(_mmrContext, videoDeviceUrl.toAscii().constData(), "video");
+        	_videoDeviceOutputID = mmr_output_attach(_mmrContext, _videoDeviceUrl.toAscii().constData(), "video");
         	if (_videoDeviceOutputID == -1) {
         		qCritical()  << "VideoView::mmrInitialize: mmr_output_attach video failed.";
+        	} else {
+            	qDebug()  << "VideoView::mmrInitialize: _videoDeviceOutputID: " << _videoDeviceOutputID;
         	}
 
-        	_audioDeviceOutputID = mmr_output_attach(_mmrContext, audioDeviceUrl.toAscii().constData(), "audio");
+        	_audioDeviceOutputID = mmr_output_attach(_mmrContext, _audioDeviceUrl.toAscii().constData(), "audio");
         	if (_audioDeviceOutputID == -1) {
         		qCritical()  << "VideoView::mmrInitialize: mmr_output_attach audio failed.";
+        	} else {
+            	qDebug()  << "VideoView::mmrInitialize: _audioDeviceOutputID: " << _audioDeviceOutputID;
         	}
+
+        	if (_captionDeviceUrl.length() > 0) {
+				_captionDeviceOutputID = mmr_output_attach(_mmrContext, _captionDeviceUrl.toAscii().constData(), "subpicture");  //CAPTIONS
+				if (_captionDeviceOutputID == -1) {																										//
+					qCritical()  << "VideoView::mmrInitialize: mmr_output_attach caption failed.";
+	        	} else {
+	            	qDebug()  << "VideoView::mmrInitialize: _captionDeviceOutputID: " << _captionDeviceOutputID;
+	        	}
+
+	        	if (_captionFileUrl.toString(QUrl::None).size() > 0) {
+	        		_captionExternalDeviceInputID = mmr_input_parameters(_mmrContext, getCaptionParams()); 			// SMPTE-TT FILES
+	        		if (_captionExternalDeviceInputID == -1)															//
+	        		{																									//
+						qCritical()  << "VideoView::mmrInitialize: mmr_input_parameters caption file failed.";
+	            	} else {
+	                	qDebug()  << "VideoView::mmrInitialize: _captionExternalDeviceInputID: " << _captionExternalDeviceInputID;
+	        		}
+	        	}
+			}
 
         	/*
         	 * Attach the media as input.
@@ -172,6 +308,12 @@ void VideoView::mmrCleanup()
 		}
 	}
 
+	if (_captionDeviceOutputID > 0) {
+		if (mmr_output_detach(_mmrContext, _captionDeviceOutputID) != 0) {
+    		qCritical()  << "VideoView::mmrCleanup: mmr_output_detach caption failed.";
+		}																										//
+    }																										//
+
 	if (_mmrContext) {
 		if (mmr_context_destroy(_mmrContext) != 0) {
     		qCritical()  << "VideoView::mmrCleanup: mmr_context_destroy failed.";
@@ -183,9 +325,12 @@ void VideoView::mmrCleanup()
     }
 
     _mmrContext = 0;
+    _mmrConnection = 0;
+
     _videoDeviceOutputID = -1;
     _audioDeviceOutputID = -1;
-    _mmrConnection = 0;
+    _captionDeviceOutputID = -1;
+	_captionExternalDeviceInputID = -1;
 }
 
 void VideoView::onRegenerated()
@@ -205,211 +350,261 @@ void VideoView::onRegenerated()
 	}
 }
 
-/*
- * Display the video full screen
- */
-strm_dict_t* VideoView::calculateRect(int x, int y, int width, int height) {
-	char buffer[16];
-	strm_dict_t *dict = strm_dict_new();
-
-    float mediaAspect = (float)_mediaWidth / (float)_mediaHeight;
-	float screenAspect = (float)width/(float)height;
-    //const float aspectTolerance = 0.1;
-
-	if (NULL == dict) {
-		return NULL;
-	}
-
-	//fullscreen is the default.
-	dict = strm_dict_set(dict, "video_dest_x", itoa(0, buffer, 10));
-	if (NULL == dict)
-		goto fail;
-	dict = strm_dict_set(dict, "video_dest_y", itoa(0, buffer, 10));
-	if (NULL == dict)
-		goto fail;
-	dict = strm_dict_set(dict, "video_dest_w", itoa(width, buffer, 10));
-	if (NULL == dict)
-		goto fail;
-	dict = strm_dict_set(dict, "video_dest_h", itoa(height/2, buffer, 10));
-	if (NULL == dict)
-		goto fail;
-/*
-	if (fabs(screenAspect - mediaAspect) < aspectTolerance) {
-
-	} else if (screenAspect < mediaAspect) {
-		if (height < _mediaHeight) {
-			// If the screen height is taller than the video's height, we need to center the video vertically and set the video width to be the same as the screen width while maintaining the aspect ratio. We have to figure out how to map the video to the narrow screen. To do that, we want to change the video_dest_y value of the origin of the video window rectangle. We need to take the difference between the screen height and the video height and divide by two so we get an equal amount of unused space above and below. We adjust the height of the video image by dividing the screen width by the video aspect ratio to scale it down. This operation adjusts the video height so that it appears in the same aspect ratio.
-
-			dict = strm_dict_set(dict, "video_dest_y", itoa((_mediaHeight - height) / 2, buffer, 10));
-			if (NULL == dict)
-				goto fail;
-			height = width / mediaAspect;
-			dict = strm_dict_set(dict, "video_dest_h", itoa(height, buffer, 10));
-			if (NULL == dict)
-				goto fail;
-		}
-		if (height > _mediaHeight) {
-			// If the screen height is taller than the video's height, we need to center the video vertically and set the video width to be the same as the screen width while maintaining the aspect ratio. We have to figure out how to map the video to the narrow screen. To do that, we want to change the video_dest_y value of the origin of the video window rectangle. We need to take the difference between the screen height and the video height and divide by two so we get an equal amount of unused space above and below. We adjust the height of the video image by dividing the screen width by the video aspect ratio to scale it down. This operation adjusts the video height so that it appears in the same aspect ratio.
-
-			dict = strm_dict_set(dict, "video_dest_y", itoa((height - _mediaHeight) / 2, buffer, 10));
-			if (NULL == dict)
-				goto fail;
-			height = width / mediaAspect;
-			dict = strm_dict_set(dict, "video_dest_h", itoa(height, buffer, 10));
-			if (NULL == dict)
-				goto fail;
-		}
-		if (width > _mediaWidth) {
-			// If the screen width is wider than the video's width, we need to center the video horizontally and set the video height to be the same as the screen height while maintaining the aspect ratio. We have to figure out how to map the video to the wider screen. To do that, we want to change the video_dest_x value of the origin of the video window rectangle. We need to take the difference between the screen width and the video width and divide by two so that we get an equal amount of unused space on the right and left. We adjust the width of the video image by multiplying the screen height by the video aspect ratio to scale it up. This operation stretches the video width so that it appears in the same aspect ratio.
-
-			dict = strm_dict_set(dict, "video_dest_x", itoa((width - _mediaWidth) / 2, buffer, 10));
-			if (NULL == dict)
-				goto fail;
-			width = height * mediaAspect;
-			dict = strm_dict_set(dict, "video_dest_w", itoa(width, buffer, 10));
-			if (NULL == dict)
-			goto fail;
-		}
-	}
-*/
-
-	return dict;
-
-fail:
-	strm_dict_destroy(dict);
-	return NULL;
-}
-
 void VideoView::handleScreenEvent(bps_event_t *event)
 {
-
     int screenEvent;
 	char id[256];
 	char group[256];
 	int size[2];
 	int returnCode;
-	screen_window_t screenVideoWindow;
+	screen_window_t screenWindow;
 
 	View::handleScreenEvent(event);
 
-    screen_event_t screen_event = screen_event_get_event(event);
+	if (initialized()) {
+		screen_event_t screen_event = screen_event_get_event(event);
 
-    //Query type of screen event and its location on the screen
-    screen_get_event_property_iv(screen_event, SCREEN_PROPERTY_TYPE,
-            &screenEvent);
+		//Query type of screen event and its location on the screen
+		screen_get_event_property_iv(screen_event, SCREEN_PROPERTY_TYPE, &screenEvent);
 
-	switch (screenEvent) {
-		case SCREEN_EVENT_CREATE:
-			returnCode = screen_get_event_property_pv(screen_event, SCREEN_PROPERTY_WINDOW, (void**)&screenVideoWindow);
-			if (returnCode != 0) {
-				qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window";
-			} else {
-				qDebug() << "VideoView::handleScreenEvent: video_window: " << (int)screenVideoWindow;
-
-
-				returnCode = screen_get_window_property_cv(screenVideoWindow, SCREEN_PROPERTY_ID_STRING, 256, id);
+		switch (screenEvent) {
+			case SCREEN_EVENT_CREATE:
+				returnCode = screen_get_event_property_pv(screen_event, SCREEN_PROPERTY_WINDOW, (void**)&screenWindow);
 				if (returnCode != 0) {
-					qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window ID";
+					qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window";
 				} else {
-					qDebug() << "VideoView::handleScreenEvent: window ID is " << id << "\n";
-					if (strncmp(id, _id.toAscii().constData(), strlen(_id.toAscii().constData())) != 0) {
-						qCritical()  << "VideoView::handleScreenEvent: ID doesn't match overlay window ID " << _id << " - skipping rest of setup";
+					qDebug() << "VideoView::handleScreenEvent: video_window: " << (int)screenWindow;
+
+
+					memset(id, 0, 256);
+					returnCode = screen_get_window_property_cv(screenWindow, SCREEN_PROPERTY_ID_STRING, 255, id);
+					if (returnCode != 0) {
+						qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window ID";
 					} else {
-						returnCode = screen_get_window_property_cv(screenVideoWindow, SCREEN_PROPERTY_GROUP, 256, group);
+						qDebug() << "VideoView::handleScreenEvent: window ID is " << id << "\n";
+
+						memset(group, 0, 256);
+						returnCode = screen_get_window_property_cv(screenWindow, SCREEN_PROPERTY_GROUP, 256, group);
 						if (returnCode != 0) {
 							qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window group";
 						} else {
 							qDebug() << "VideoView::handleScreenEvent: window group is " << group << "\n";
-							qDebug() << "VideoView::handleScreenEvent: window backup group is " << _backupGroup << "\n";
+						}
 
-							if (strncmp(group, _backupGroup.toAscii().constData(), strlen(_backupGroup.toAscii().constData())) == 0) {
-								qCritical()  << "VideoView::handleScreenEvent: group match overlay window group - already setup";
-							} else {
-								qDebug() << "VideoView::handleScreenEvent: correct video window detected\n";
+						int videoZ;
 
+						returnCode = screen_get_window_property_iv(screenWindow, SCREEN_PROPERTY_ZORDER, &videoZ);
+						if (returnCode != 0) {
+							qCritical()  << "VideoView::handleScreenEvent: failed to retrieve Z";
+						} else {
+							qDebug() << "VideoView::handleScreenEvent: Z is " << videoZ << "\n";
+						}
 
-								_screenVideoWindow = screenVideoWindow;
+						returnCode = screen_get_window_property_iv(screenWindow, SCREEN_PROPERTY_SIZE, size);
+						if (returnCode != 0) {
+							qCritical()  << "VideoView::handleScreenEvent: failed to retrieve size";
+						} else {
+							qDebug() << "VideoView::handleScreenEvent: size is " << size[0] << "," << size[1] << "\n";
+						}
 
-								if (_screenWindow != NULL) {
-									int position[2];
+						if (strcmp(id, _id.toAscii().constData()) != 0) {
+							if (_showCaptions) {
+								QString _id_CC = QString("CC_").append(_id);
+								if (strcmp(id, _id_CC.toAscii().constData()) == 0) {
+									qCritical()  << "VideoView::handleScreenEvent: detected a second window ... probably the CC overlay";
 
-									//position[0] = _x + _leftPadding;
-									//position[1] = _y + _topPadding;
-									position[0] = _leftPadding;
-									position[1] = _topPadding;
-
-									returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_POSITION, position);
+									returnCode = screen_get_window_property_cv(screenWindow, SCREEN_PROPERTY_GROUP, 256, group);
 									if (returnCode != 0) {
-										qCritical()  << "VideoView::handleScreenEvent: failed to override position";
+										qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window group";
 									} else {
-										qDebug() << "VideoView::handleScreenEvent: position is " << position[0] << "," << position[1] << "\n";
+										qDebug() << "VideoView::handleScreenEvent: window group is " << group << "\n";
+										qDebug() << "VideoView::handleScreenEvent: window backup group is " << _backupGroup << "\n";
 
-										size[0] = _width - _leftPadding - _rightPadding;
-										size[1] = _height - _topPadding - _bottomPadding;
-
-										returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_SIZE, size);
-										if (returnCode != 0) {
-											qCritical()  << "VideoView::handleScreenEvent: failed to override size";
+										if (strncmp(group, _backupGroup.toAscii().constData(), strlen(_backupGroup.toAscii().constData())) == 0) {
+											qCritical()  << "VideoView::handleScreenEvent: group match overlay window group - already setup";
 										} else {
-											qDebug() << "VideoView::handleScreenEvent: size is " << size[0] << "," << size[1] << "\n";
+											qDebug() << "VideoView::handleScreenEvent: correct video CC window detected\n";
 
-											int videoZ = _z - 1;
+											_screenVideoCCWindow = screenWindow;
 
-											returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_ZORDER, &videoZ);
-											if (returnCode != 0) {
-												qCritical()  << "VideoView::handleScreenEvent: failed to override Z";
-											} else {
-												qDebug() << "VideoView::handleScreenEvent: Z is " << videoZ << "\n";
+											if (_screenWindow) {
+												int position[2];
 
-												if (_display == DISPLAY_HDMI) {
-													//returnCode = screen_get_window_property_pv(_nativeWindow->getScreenWindow(), SCREEN_PROPERTY_DISPLAY, &display);
-													screen_display_t* attachedDisplay = NativeWindow::getAttachedDisplay();
-													if (attachedDisplay) {
-														returnCode = screen_set_window_property_pv(_screenVideoWindow, SCREEN_PROPERTY_DISPLAY, (void**)attachedDisplay);
+												position[0] = _leftPadding;
+												position[1] = _topPadding;
+
+												returnCode = screen_set_window_property_iv(_screenVideoCCWindow, SCREEN_PROPERTY_POSITION, position);
+												if (returnCode != 0) {
+													qCritical()  << "VideoView::handleScreenEvent: failed to override position";
+												} else {
+													qDebug() << "VideoView::handleScreenEvent: position is " << position[0] << "," << position[1] << "\n";
+
+													size[0] = _width - _leftPadding - _rightPadding;
+													size[1] = _height - _topPadding - _bottomPadding;
+
+													returnCode = screen_set_window_property_iv(_screenVideoCCWindow, SCREEN_PROPERTY_SIZE, size);
+													if (returnCode != 0) {
+														qCritical()  << "VideoView::handleScreenEvent: failed to override size";
+													} else {
+														qDebug() << "VideoView::handleScreenEvent: size is " << size[0] << "," << size[1] << "\n";
+
+														videoZ = _z - 1;
+
+														returnCode = screen_set_window_property_iv(_screenVideoCCWindow, SCREEN_PROPERTY_ZORDER, &videoZ);
 														if (returnCode != 0) {
-															qCritical()  << "VideoView::handleScreenEvent: failed to override display";
+															qCritical()  << "VideoView::handleScreenEvent: failed to override Z";
 														} else {
-															qDebug() << "VideoView::handleScreenEvent: display is " << attachedDisplay << "\n";
+															qDebug() << "VideoView::handleScreenEvent: Z is " << videoZ << "\n";
+
+															if (_display == DISPLAY_HDMI) {
+																screen_display_t* attachedDisplay = NativeWindow::getAttachedDisplay();
+																if (attachedDisplay) {
+																	returnCode = screen_set_window_property_pv(_screenVideoCCWindow, SCREEN_PROPERTY_DISPLAY, (void**)attachedDisplay);
+																	if (returnCode != 0) {
+																		qCritical()  << "VideoView::handleScreenEvent: failed to override display";
+																	} else {
+																		qDebug() << "VideoView::handleScreenEvent: display is " << attachedDisplay << "\n";
+																	}
+																}
+															}
+
+		                                                    if (_display == DISPLAY_DEVICE) {
+		                                                        if (_showCaptions) {
+		                                                            returnCode = screen_join_window_group( _screenWindow, _group.toAscii().data());
+		                                                        }
+		                                                    }
+		                                                    if (_showCaptions) {
+		                                                        returnCode = screen_join_window_group(_screenVideoWindow, _group.toAscii().data());
+	                                                            returnCode = screen_join_window_group(_screenVideoCCWindow, _group.toAscii().data());
+		                                                    }
+
+
+															int visible = 1;
+															returnCode = screen_set_window_property_iv(_screenVideoCCWindow, SCREEN_PROPERTY_VISIBLE, &visible);
+															if (returnCode != 0) {
+																qCritical()  << "VideoView::handleScreenEvent: failed to override visible";
+															} else {
+																qDebug() << "VideoView::handleScreenEvent: visible is " << visible << "\n";
+															}
+
+															int returnCode = NativeWindow::updateScreen();
+
+															qDebug()  << "VideoView::handleScreenEvent: just about to play ...";
+
+															setAltered(true);
+
+															play();
 														}
 													}
 												}
+											}
+										}
+									}
+								} else {
+									qCritical()  << "VideoView::handleScreenEvent: ID doesn't match overlay window ID " << _id << " - skipping rest of setup";
+								}
+							}
+						} else {
+							returnCode = screen_get_window_property_cv(screenWindow, SCREEN_PROPERTY_GROUP, 256, group);
+							if (returnCode != 0) {
+								qCritical()  << "VideoView::handleScreenEvent: failed to retrieve video window group";
+							} else {
+								qDebug() << "VideoView::handleScreenEvent: window group is " << group << "\n";
+								qDebug() << "VideoView::handleScreenEvent: window backup group is " << _backupGroup << "\n";
 
-												if (_display == DISPLAY_DEVICE) {
-													_group = _backupGroup;
+								if (strncmp(group, _backupGroup.toAscii().constData(), strlen(_backupGroup.toAscii().constData())) == 0) {
+									qCritical()  << "VideoView::handleScreenEvent: group match overlay window group - already setup";
+								} else {
+									qDebug() << "VideoView::handleScreenEvent: correct video window detected\n";
 
-													returnCode = screen_join_window_group( _screenWindow,       _group.toAscii().data());
+
+									_screenVideoWindow = screenWindow;
+
+									if (_screenWindow) {
+										int position[2];
+
+										position[0] = _leftPadding;
+										position[1] = _topPadding;
+
+										returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_POSITION, position);
+										if (returnCode != 0) {
+											qCritical()  << "VideoView::handleScreenEvent: failed to override position";
+										} else {
+											qDebug() << "VideoView::handleScreenEvent: position is " << position[0] << "," << position[1] << "\n";
+
+											size[0] = _width - _leftPadding - _rightPadding;
+											size[1] = _height - _topPadding - _bottomPadding;
+
+											returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_SIZE, size);
+											if (returnCode != 0) {
+												qCritical()  << "VideoView::handleScreenEvent: failed to override size";
+											} else {
+												qDebug() << "VideoView::handleScreenEvent: size is " << size[0] << "," << size[1] << "\n";
+
+												videoZ = _z - 1;
+												if (_showCaptions) {
+													videoZ = _z - 2;
 												}
-												returnCode = screen_join_window_group(_screenVideoWindow, _group.toAscii().data());
 
-												int visible = 1;
-												returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_VISIBLE, &visible);
+												returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_ZORDER, &videoZ);
 												if (returnCode != 0) {
-													qCritical()  << "VideoView::handleScreenEvent: failed to override visible";
+													qCritical()  << "VideoView::handleScreenEvent: failed to override Z";
 												} else {
-													qDebug() << "VideoView::handleScreenEvent: visible is " << visible << "\n";
-												}
+													qDebug() << "VideoView::handleScreenEvent: Z is " << videoZ << "\n";
 
-												int returnCode = NativeWindow::updateScreen();
+													if (_display == DISPLAY_HDMI) {
+														screen_display_t* attachedDisplay = NativeWindow::getAttachedDisplay();
+														if (attachedDisplay) {
+															returnCode = screen_set_window_property_pv(_screenVideoWindow, SCREEN_PROPERTY_DISPLAY, (void**)attachedDisplay);
+															if (returnCode != 0) {
+																qCritical()  << "VideoView::handleScreenEvent: failed to override display";
+															} else {
+																qDebug() << "VideoView::handleScreenEvent: display is " << attachedDisplay << "\n";
+															}
+														}
+													}
 
-												qDebug()  << "VideoView::handleScreenEvent: just about to play ...";
+													if (_display == DISPLAY_DEVICE) {
+														_group = _backupGroup;
 
+		                                                if (!_showCaptions) {
+		                                                    returnCode = screen_join_window_group( _screenWindow,       _group.toAscii().data());
+		                                                }
+													}
+                                                    if (!_showCaptions) {
+                                                        returnCode = screen_join_window_group(_screenVideoWindow, _group.toAscii().data());
+                                                    }
+
+													int visible = 1;
+													returnCode = screen_set_window_property_iv(_screenVideoWindow, SCREEN_PROPERTY_VISIBLE, &visible);
+													if (returnCode != 0) {
+														qCritical()  << "VideoView::handleScreenEvent: failed to override visible";
+													} else {
+														qDebug() << "VideoView::handleScreenEvent: visible is " << visible << "\n";
+													}
+
+													int returnCode = NativeWindow::updateScreen();
 
 /*
-												strm_dict_t* dict = calculateRect(_leftPadding, _topPadding, size[0], size[1]);
-												//strm_dict_t* dict = calculateRect(position[0], position[1], size[0], size[1]);
-												if (NULL == dict) {
-													qCritical()  << "calculate_rect failed\n";
-												}
+													strm_dict_t* dict = calculateRect(_leftPadding, _topPadding, size[0], size[1]);
+													//strm_dict_t* dict = calculateRect(position[0], position[1], size[0], size[1]);
+													if (NULL == dict) {
+														qCritical()  << "calculate_rect failed\n";
+													}
 
-												if (mmr_output_parameters(_mmrContext, _videoDeviceOutputID, dict) != 0) {
-													qCritical()  << "mmr_output_parameters failed\n";
-												}
-												dict = NULL;
+													if (mmr_output_parameters(_mmrContext, _videoDeviceOutputID, dict) != 0) {
+														qCritical()  << "mmr_output_parameters failed\n";
+													}
+													dict = NULL;
 */
 
-												setAltered(true);
+													setAltered(true);
 
-												play();
+													if (!_showCaptions) {
+														qDebug()  << "VideoView::handleScreenEvent: just about to play ...";
+														play();
+													}
+												}
 											}
 										}
 									}
@@ -418,46 +613,46 @@ void VideoView::handleScreenEvent(bps_event_t *event)
 						}
 					}
 				}
-			}
 
-			break;
+				break;
 
-		case SCREEN_EVENT_MTOUCH_TOUCH:
-			qDebug()  << "VideoView::handleScreenEvent: just about to play after touch ...";
-			if (_playing) {
-				stop();
-			} else {
-				play();
-			}
-			break;
+			case SCREEN_EVENT_MTOUCH_TOUCH:
+				qDebug()  << "VideoView::handleScreenEvent: just about to play after touch ...";
+				if (_playing) {
+					stop();
+				} else {
+					play();
+				}
+				break;
 
-		case SCREEN_EVENT_MTOUCH_MOVE:
-			break;
+			case SCREEN_EVENT_MTOUCH_MOVE:
+				break;
 
-		case SCREEN_EVENT_MTOUCH_RELEASE:
-			break;
+			case SCREEN_EVENT_MTOUCH_RELEASE:
+				break;
 
-		case SCREEN_EVENT_POINTER:
-			int buttons;
+			case SCREEN_EVENT_POINTER:
+				int buttons;
 
-	        screen_get_event_property_iv(screen_event, SCREEN_PROPERTY_BUTTONS,
-				&buttons);
+				screen_get_event_property_iv(screen_event, SCREEN_PROPERTY_BUTTONS,
+					&buttons);
 
-	    	switch (buttons) {
-	    		case SCREEN_LEFT_MOUSE_BUTTON:
-	    		case SCREEN_RIGHT_MOUSE_BUTTON:
-	    			if (_playing) {
-	    				stop();
-	    			} else {
-	    				play();
-	    			}
-	    			break;
-	    	}
+				switch (buttons) {
+					case SCREEN_LEFT_MOUSE_BUTTON:
+					case SCREEN_RIGHT_MOUSE_BUTTON:
+						if (_playing) {
+							stop();
+						} else {
+							play();
+						}
+						break;
+				}
 
-			break;
+				break;
 
-		default:
-			break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -474,8 +669,19 @@ QString VideoView::mediaURL()
 	return mediaURL;
 }
 
-bool VideoView::playing() {
+bool VideoView::playing()
+{
 	return _playing;
+}
+
+bool VideoView::showCaptions()
+{
+	return _showCaptions;
+}
+
+QString VideoView::captionFileURL()
+{
+	return _captionFileUrl.toString(QUrl::None);
 }
 
 int VideoView::leftPadding() {
@@ -527,6 +733,28 @@ void VideoView::setMediaSize(int width, int height)
 	_mediaHeight = height;
 
 	_viewMutex.unlock();
+}
+
+void VideoView::setShowCaptions(bool showCaptions)
+{
+	_viewMutex.lock();
+
+	_showCaptions = showCaptions;
+
+	_viewMutex.unlock();
+}
+
+void VideoView::setCaptionFileURL(QString captionFileURL)
+{
+	_viewMutex.lock();
+
+	_captionFileUrl = QUrl(captionFileURL);
+
+	_viewMutex.unlock();
+
+	qDebug()  << "VideoView::setCaptionFileURL: " << captionFileURL;
+
+	setStale(true);
 }
 
 void VideoView::setLeftPadding(int leftPadding)

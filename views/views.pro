@@ -1,6 +1,6 @@
 TEMPLATE = lib
 
-CONFIG += qt warn_on cascades_library gles2
+CONFIG += qt warn_on cascades_library
 CONFIG += hardening
 
 LIBS   += -lmmrndclient -lbbutility -lbb -lpps -lscreen -lEGL -lfreetype -lpng -lstrm
@@ -10,16 +10,31 @@ include(config.pri)
 device {
     CONFIG(debug, debug|release) {
         # Device-Debug custom configuration
+		DESTDIR = $$QNX_VARIANT/$${GLAPI}
+		OBJECTS_DIR = $$DESTDIR/.obj
+		MOC_DIR = $$DESTDIR/.moc
+		RCC_DIR = $$DESTDIR/.qrc
+		UI_DIR = $$DESTDIR/.ui
     }
 
     CONFIG(release, debug|release) {
         # Device-Release custom configuration
+		DESTDIR = $$QNX_VARIANT-g/$${GLAPI}
+		OBJECTS_DIR = $$DESTDIR/.obj
+		MOC_DIR = $$DESTDIR/.moc
+		RCC_DIR = $$DESTDIR/.qrc
+		UI_DIR = $$DESTDIR/.ui
     }    
 }
 
 simulator {
     CONFIG(debug, debug|release) {
         # Simulator-Debug custom configuration
+		DESTDIR = $$QNX_VARIANT-g/$${GLAPI}
+		OBJECTS_DIR = $$DESTDIR/.obj
+		MOC_DIR = $$DESTDIR/.moc
+		RCC_DIR = $$DESTDIR/.qrc
+		UI_DIR = $$DESTDIR/.ui
     }
 }
 
@@ -39,6 +54,15 @@ defineTest(setGLApi) {
 	export(GLAPI)
 	
 	message("defineTest Building with OpenGL api "$${GLAPI})	
+	
+	#define moc and obj dirs
+	#MOC_DIR = ./.moc_$${GLAPI}
+	#export(MOC_DIR)
+	
+	#OBJECTS_DIR = ./.obj_$${GLAPI}
+	#export(OBJECTS_DIR)
+	
+	#message("defineTest Building with MOC_DIR "$${MOC_DIR}" and OBJECTS_DIR "$${OBJECTS_DIR})	
 	
 	# define GLAPI for C/C++
 	DEFINES += $$upper($$1)
