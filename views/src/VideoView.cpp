@@ -221,6 +221,7 @@ void VideoView::mmrInitialize()
             	_captionDeviceUrl += QString("CC_").append(_id);
             	_captionDeviceUrl += "&wingrp=";
             	_captionDeviceUrl += _group;
+               // _captionDeviceUrl += "&initflags=invisible";  // should be included but this is causing the CC's to not appear right now
                 _captionDeviceUrl += "&ymmf.VideoWriterDisplayIndex=0";  //CAPTIONS;
             	qDebug()  << "VideoView::mmrInitialize: captionDeviceUrl: " << _captionDeviceUrl.toAscii().constData();
 
