@@ -35,7 +35,6 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 	_mmrContext = 0;
 	_screenVideoWindow = 0;
 	_screenVideoCCWindow = 0;
-	_videoCCWindow = NULL;
 
 	_playing = false;
 
@@ -59,10 +58,6 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 
 VideoView::~VideoView() {
 	// TODO Auto-generated destructor stub
-	if (_videoCCWindow) {
-		delete _videoCCWindow;
-		_videoCCWindow = NULL;
-	}
 }
 
 int VideoView::initialize() {

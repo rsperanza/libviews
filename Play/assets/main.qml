@@ -25,8 +25,8 @@ Page {
 					z: -2
 					x: 0
 					y: 0
-					width: 720
-					height: 405
+					width: 0
+					height: 0
 					//mediaURL: _app.fileURL("app/native/assets/media/VID_00000007.mp4")
 					mediaURL: _app.fileURL("app/native/assets/media/Demo_1080i_CC.ts")
 					//mediaURL: _app.fileURL("app/native/assets/media/waterfallVideo_CC.mov")
@@ -50,7 +50,10 @@ Page {
 					y: 0
 					width: 0
 					height: 0
-					mediaURL: _app.fileURL("app/native/assets/media/VID_00000007.mp4")
+					//mediaURL: _app.fileURL("app/native/assets/media/VID_00000007.mp4")
+					mediaURL: _app.fileURL("app/native/assets/media/Demo_1080i_CC.ts")
+					//mediaURL: _app.fileURL("app/native/assets/media/waterfallVideo_CC.mov")
+					//captionFileURL: _app.fileURL("app/native/assets/media/waterfall_sample.ttml")
 					topPadding: 50
 					bottomPadding: 50
 					enabled: false
@@ -92,6 +95,15 @@ Page {
     }
     actions: [
         ActionItem {
+        	imageSource: "asset:///images/actions/ic_play.png"
+            title: "Play"
+            ActionBar.placement: ActionBarPlacement.OnBar
+            onTriggered: {
+	                videoOverlay.seek(0);
+	                videoOverlay.play();
+            }
+        },
+        ActionItem {
             title: "Connect to MiraCast"
             ActionBar.placement: ActionBarPlacement.OnBar
             onTriggered: {
@@ -101,6 +113,11 @@ Page {
         }
     ]
     actionBarVisibility: ChromeVisibility.Visible
+		        
+		onCreationCompleted: {
+	    	OrientationSupport.supportedDisplayOrientation =
+	        SupportedDisplayOrientation.DisplayLandscape; 
+	    }
 
 }
 

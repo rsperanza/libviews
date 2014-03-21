@@ -147,7 +147,6 @@ protected:
     bool _playing;
     bool _showCaptions;
 
-	NativeWindow* _videoCCWindow;
 	screen_window_t _screenVideoCCWindow;
 	screen_window_t _screenVideoWindow;
 

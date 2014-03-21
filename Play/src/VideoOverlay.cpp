@@ -36,7 +36,7 @@ VideoOverlay::VideoOverlay(ViewDisplay display) : VideoView(display)
 	_evenDashes = new float[2] { 20.0, 10.0 };
 	_evenDashesStroke = _graphics2D->createStroke(5.0, CAP_NONE, JOIN_NONE, 0.0, _evenDashes, 2, 0.0);
 	_defaultStroke = _graphics2D->createStroke(5.0);
-	_lineColor = new GLColor { 1.0f, 1.0f, 0.5f, 0.75f };
+	_lineColor = new GLColor { 1.0f, 1.0f, 0.5f, 0.25f };
 }
 
 VideoOverlay::~VideoOverlay() {
@@ -78,7 +78,7 @@ void VideoOverlay::onRegenerated()
 			double rightCornersX[3] { _width - _rightPadding - _width/20.0, _width - _rightPadding, _width - _rightPadding };
 			double bottomCornersY[3]  { _bottomPadding, _bottomPadding, _bottomPadding + _height/20.0 };
 
-			_graphics2D->setStroke(_evenDashesStroke);
+			//_graphics2D->setStroke(_evenDashesStroke);
 			_graphics2D->drawPolyline(leftCornersX, topCornersY, 3);
 			_graphics2D->drawPolyline(rightCornersX, topCornersY, 3);
 			_graphics2D->drawPolyline(leftCornersX, bottomCornersY, 3);
