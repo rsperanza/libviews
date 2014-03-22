@@ -79,7 +79,7 @@
     <configuration name="Device-Profile">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="arm-p/o.le-v7-g/Play" entry="true" type="Qnx/Elf">Play</asset>
-       <asset path="${workspace_loc:/views/arm/so.le-v7-g/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
+       <asset path="${workspace_loc:/views/arm-p/so.le-v7-g/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
      </configuration>
     <configuration name="Simulator-Debug">
        <platformArchitecture>x86</platformArchitecture>

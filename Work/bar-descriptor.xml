@@ -68,23 +68,23 @@
     <configuration name="Device-Debug">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="arm/o.le-v7-g/Work" entry="true" type="Qnx/Elf">Work</asset>
-       <asset path="${workspace_loc:/views/arm/so.le-v7-g/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
+       <asset path="${workspace_loc:/views/arm/so.le-v7-g/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
     </configuration>
     <configuration name="Device-Release">
        <entryPointType>Qnx/Cascades</entryPointType>
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="arm/o.le-v7/Work.so" entry="true" type="Qnx/Elf">Work.so</asset>
-       <asset path="${workspace_loc:/views/arm/so.le-v7/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
+       <asset path="${workspace_loc:/views/arm/so.le-v7/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
     </configuration>
     <configuration name="Device-Profile">
        <platformArchitecture>armle-v7</platformArchitecture>
        <asset path="arm-p/o.le-v7-g/Work" entry="true" type="Qnx/Elf">Work</asset>
-       <asset path="${workspace_loc:/views/arm/so.le-v7-g/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
+       <asset path="${workspace_loc:/views/arm-p/so.le-v7-g/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
      </configuration>
     <configuration name="Simulator-Debug">
        <platformArchitecture>x86</platformArchitecture>
        <asset path="x86/o-g/Work" entry="true" type="Qnx/Elf">Work</asset>
-       <asset path="${workspace_loc:/views/x86/so-g/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
+       <asset path="${workspace_loc:/views/x86/so-g/gles2/libviews-gles2.so}" type="Qnx/Elf">lib/libviews-gles2.so.1</asset>
     </configuration>
     
     <!--  The icon for the application -->
