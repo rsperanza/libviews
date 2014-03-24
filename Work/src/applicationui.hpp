@@ -2,6 +2,8 @@
 #ifndef ApplicationUI_HPP_
 #define ApplicationUI_HPP_
 
+#include <bbndk.h>
+
 #include <QObject>
 #include <QRectF>
 
@@ -9,10 +11,10 @@
 #include <bb/system/InvokeReply>
 #include <bb/system/InvokeRequest>
 
-
 #include "views/Views.hpp"
-#include "LineGraph.hpp"
 #include "PieChart.hpp"
+#include "LineGraph.hpp"
+#include "SignaturePad.hpp"
 
 namespace bb { namespace cascades { class Application; }}
 

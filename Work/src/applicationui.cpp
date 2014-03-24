@@ -7,7 +7,6 @@
 #include <bb/cascades/Window>
 
 #include "applicationui.hpp"
-#include "SignaturePad.hpp"
 
 using namespace bb::cascades;
 
@@ -15,9 +14,9 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 : QObject(app), _app(app), _invokeManager(new InvokeManager())
 {
 	// register some new types for QML
-    qmlRegisterType < PieChart >      ("com.example.views", 1, 0, "PieChart");
-    qmlRegisterType < LineGraph >      ("com.example.views", 1, 0, "LineGraph");
-    qmlRegisterType < SignaturePad >      ("com.example.controls", 1, 0, "SignaturePad");
+    qmlRegisterType < PieChart >      ("views.graphs", 1, 0, "PieChart");
+    qmlRegisterType < LineGraph >      ("views.graphs", 1, 0, "LineGraph");
+    qmlRegisterType < SignaturePad >      ("views.controls", 1, 0, "SignaturePad");
 
 	_dataPath = QDir::current().absoluteFilePath("data");
 
@@ -32,7 +31,7 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 		// create root object for the UI
 		TabbedPane *root = qml->createRootObject<TabbedPane>();
 		if (root) {
-			ViewControl* viewControl = root->findChild<ViewControl*>("workVC");
+			//ViewControl* viewControl = root->findChild<ViewControl*>("workVC");
 
 			//if (viewControl) {
 			//	 _signaturePad = root->findChild<SignaturePad*>("signature");

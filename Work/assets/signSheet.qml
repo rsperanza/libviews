@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 import bb.cascades 1.0
-import com.example.controls 1.0
+import views.controls 1.0
 
 Sheet {
-    id: signSheet
+    id: signatureSheet
 
     property variant readyForFocus: false    
 	property string signatureImageFileURL: ""		            
@@ -38,7 +38,7 @@ Sheet {
 			    dismissAction: ActionItem {
 			        title: qsTr("Cancel")
 			        onTriggered: {
-	                    signSheet.close();
+	                    signatureSheet.close();
 			        }
 			    }
 			         
@@ -68,9 +68,6 @@ Sheet {
 
                     horizontalAlignment: HorizontalAlignment.Fill
                     
-	            	property variant signSheet
-	            	property bool signSheetOpen
-		            
 		            Label {
 		                id: clickLabel
 		                objectName: "clickLabel"
@@ -98,13 +95,13 @@ Sheet {
 			            //preferredHeight: 300
 			            
 			            onSaved: {
-			            	console.log("onSaved: " + signSheet.signatureImageFileURL);
-			            	if (signSheet.signatureImageFileURL == "") {
+			            	console.log("onSaved: " + signatureSheet.signatureImageFileURL);
+			            	if (signatureSheet.signatureImageFileURL == "") {
 			            		console.log("onSaved: " + _app.getAbsoluteDataFilename("signature.png"));
 			            		console.log("onSaved: " + _app.getFileURL(_app.getAbsoluteDataFilename("signature.png")));
-			            		signSheet.signatureImageFileURL = _app.getFileURL(_app.getAbsoluteDataFilename("signature.png"));
-				            	signatureImage(signSheet.signatureImageFileURL);
-		                    	signSheet.close();
+			            		signatureSheet.signatureImageFileURL = _app.getFileURL(_app.getAbsoluteDataFilename("signature.png"));
+				            	signatureImage(signatureSheet.signatureImageFileURL);
+		                    	signatureSheet.close();
 		                    }
 			            }       
 			        }

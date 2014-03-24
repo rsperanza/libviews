@@ -6,13 +6,11 @@ views {
 
 	INCLUDEPATH *=  $$quote($${BASEDIR}/include)
 	DEPENDPATH *=  $$quote($${BASEDIR}/include)
-	INCLUDEPATH *=  $$quote($${BASEDIR}/test)
-	DEPENDPATH *=  $$quote($${BASEDIR}/test)
 	
 	device {
 		profile {
 		    LIBS += -L$${BASEDIR}/arm/so.le-v7-g/$${GLAPI} -l$${LIBTARGET}
-		    PRE_TARGETDEPS +=  $$quote($${BASEDIR}/arm/so.le-v7-g/$${GLAPI}/lib$${LIBTARGET}.so)		
+		    PRE_TARGETDEPS +=  $$quote($${BASEDIR}/arm-p/so.le-v7-g/$${GLAPI}/lib$${LIBTARGET}.so)		
 		}
 		else {
 		    CONFIG(debug, debug|release) {
@@ -35,5 +33,14 @@ views {
 	        LIBS += -L$${BASEDIR}/x86/so-g/$${GLAPI} -l$${LIBTARGET}
 	        PRE_TARGETDEPS +=  $$quote($${BASEDIR}/x86/so-g/$${GLAPI}/lib$${LIBTARGET}.so)
 	    }
+	}
+	
+	LIBS  += -lmmrndclient -lbbutility -lbb -lpps -lscreen -lEGL -lfreetype -lpng -lstrm
+	contains(GLAPI, gles1) {
+		LIBS += -lGLESv1_CM
+	} else:contains(GLAPI, gles2) {
+		LIBS += -lGLESv2
+	} else:contains(GLAPI, gles3) {
+		LIBS += -lGLESv2
 	}
 }

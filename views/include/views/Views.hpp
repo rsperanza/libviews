@@ -17,8 +17,6 @@
 #ifndef VIEWS_HPP
 #define VIEWS_HPP
 
-#include <bbndk.h>
-
 #include <QtCore/QObject>
 #include "base/View.hpp"
 #include "graphics/Graphics2D.hpp"

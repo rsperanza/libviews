@@ -2,6 +2,13 @@
 <!DOCTYPE TS>
 <TS version="2.0">
 <context>
+    <name>Copy of main</name>
+    <message>
+        <source></source>
+        <translation></translation>
+    </message>
+</context>
+<context>
     <name>main</name>
     <message>
         <source>New Message</source>

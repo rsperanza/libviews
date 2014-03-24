@@ -230,7 +230,7 @@ ApplicationUI::ApplicationUI(bb::cascades::Application *app)
 		// create root object for the UI
 		Page *root = qml->createRootObject<Page>();
 		 if (root) {
-			 ViewControl* viewControl = root->findChild<ViewControl*>("playVC");
+			 //ViewControl* viewControl = root->findChild<ViewControl*>("playVC");
 
 			// set created root object as a scene
 			app->setScene(root);
