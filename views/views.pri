@@ -34,13 +34,4 @@ views {
 	        PRE_TARGETDEPS +=  $$quote($${BASEDIR}/x86/so-g/$${GLAPI}/lib$${LIBTARGET}.so)
 	    }
 	}
-	
-	LIBS  += -lmmrndclient -lbbutility -lbb -lpps -lscreen -lEGL -lfreetype -lpng -lstrm
-	contains(GLAPI, gles1) {
-		LIBS += -lGLESv1_CM
-	} else:contains(GLAPI, gles2) {
-		LIBS += -lGLESv2
-	} else:contains(GLAPI, gles3) {
-		LIBS += -lGLESv2
-	}
 }

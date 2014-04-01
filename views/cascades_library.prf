@@ -45,8 +45,8 @@ cascades_library {
 	CONFIG(debug, debug|release) {
 	    DESTDIR = $$QNX_VARIANT-g/$${GLAPI}
 	    DEFINES += QT_DECLARATIVE_DEBUG
-	    QMAKE_CFLAGS *= -g -Og
-	    QMAKE_CXXFLAGS *= -g -Og
+	    QMAKE_CFLAGS *= -fvisibility=hidden -g -Og
+	    QMAKE_CXXFLAGS *= -fvisibility=hidden -g -Og
 	}
 		
 	!contains(CASCADES_LIBRARY, no_static) {

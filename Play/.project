@@ -3,6 +3,7 @@
 	<name>Play</name>
 	<comment></comment>
 	<projects>
+		<project>views</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

@@ -27,7 +27,7 @@ using namespace bb::cascades;
 namespace views {
 	namespace cascades {
 
-class Canvas : public ViewControl {
+class Q_DECL_EXPORT Canvas : public ViewControl {
 
     Q_OBJECT
 

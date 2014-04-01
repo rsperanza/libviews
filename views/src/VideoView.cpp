@@ -38,16 +38,17 @@ VideoView::VideoView(ViewDisplay display) : View(display), _mediaURL(), _graphic
 
 	_playing = false;
 
-    _leftPadding = 0;
-    _rightPadding = 0;
-    _topPadding = 0;
-    _bottomPadding = 0;
-
 	// I/O variables
 	_videoDeviceOutputID = -1;
 	_audioDeviceOutputID = -1;
 	_captionDeviceOutputID = -1;
 	_captionExternalDeviceInputID = -1;
+	_subpictureIndex = -2;
+
+    _leftPadding = 0;
+    _rightPadding = 0;
+    _topPadding = 0;
+    _bottomPadding = 0;
 
 	_transparency = SCREEN_TRANSPARENCY_SOURCE_OVER;
 
@@ -106,9 +107,18 @@ strm_dict_t* VideoView::getCaptionParams() {
 	char buffer[16];
 	strm_dict_t *dict = strm_dict_new();
 
-	dict = strm_dict_set(dict, "subpicture_url", _captionFileUrl.toString().toAscii().data());
-	if (NULL == dict)
-		goto fail;
+	if (_subpictureIndex > -2) {
+	    itoa(_subpictureIndex, buffer, 10);
+	    dict = strm_dict_set(dict, "subpicture_index", buffer);
+	    if (NULL == dict)
+	        goto fail;
+	}
+
+	if (_captionFileUrl.toString(QUrl::None).size() > 0) {
+        dict = strm_dict_set(dict, "subpicture_url", _captionFileUrl.toString().toAscii().data());
+        if (NULL == dict)
+            goto fail;
+	}
 
 	return dict;
 
@@ -670,6 +680,10 @@ bool VideoView::playing()
 	return _playing;
 }
 
+int VideoView::subpictureIndex() {
+    return _subpictureIndex;
+}
+
 bool VideoView::showCaptions()
 {
 	return _showCaptions;
@@ -729,6 +743,17 @@ void VideoView::setMediaSize(int width, int height)
 	_mediaHeight = height;
 
 	_viewMutex.unlock();
+}
+
+void VideoView::setSubpictureIndex(int subpictureIndex)
+{
+    _viewMutex.lock();
+
+    _subpictureIndex = subpictureIndex;
+
+    _viewMutex.unlock();
+
+    setStale(true);
 }
 
 void VideoView::setShowCaptions(bool showCaptions)

@@ -28,7 +28,7 @@ using namespace views::graphics;
 namespace views {
 	namespace graphics {
 
-class CanvasView : public View {
+class Q_DECL_EXPORT CanvasView : public View {
 
     Q_OBJECT
 

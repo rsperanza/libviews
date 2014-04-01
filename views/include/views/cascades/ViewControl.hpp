@@ -30,7 +30,7 @@ namespace views {
 	namespace cascades {
 
 
-class ViewControl: public ForeignWindowControl {
+class Q_DECL_EXPORT ViewControl: public ForeignWindowControl {
 
     Q_OBJECT
 

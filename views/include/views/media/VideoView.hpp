@@ -58,6 +58,7 @@ Q_OBJECT
 Q_PROPERTY(QString mediaURL        READ mediaURL        WRITE setMediaURL)
 Q_PROPERTY(bool playing            READ playing)
 Q_PROPERTY(bool showCaptions       READ showCaptions    WRITE setShowCaptions)
+Q_PROPERTY(int  subpictureIndex    READ subpictureIndex WRITE setSubpictureIndex)
 Q_PROPERTY(QString captionFileURL  READ captionFileURL  WRITE setCaptionFileURL)
 
 Q_PROPERTY(int leftPadding         READ leftPadding     WRITE setLeftPadding)
@@ -75,6 +76,7 @@ public:
 	bool playing();
 
 	bool showCaptions();
+    int subpictureIndex();
 	QString captionFileURL();
 
 	int leftPadding();
@@ -95,6 +97,7 @@ public Q_SLOTS:
 	void setMediaSize(int width, int height);
 
 	void setShowCaptions(bool showCaptions);
+    void setSubpictureIndex(int subpictureIndex);
 	void setCaptionFileURL(QString captionFileURL);
 
 	void setLeftPadding(int leftPadding);
@@ -131,6 +134,7 @@ protected:
     QString _audioDeviceUrl;
     QString _captionDeviceUrl;
     QUrl _captionFileUrl;
+    int _subpictureIndex;
 
     // Name of video context
     QString videoContextName;

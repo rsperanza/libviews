@@ -27,10 +27,13 @@ Page {
 					y: 0
 					width: 0
 					height: 0
+					mediaURL: "http://www.cpcweb.com/webcasts/hls/cpcdemo.m3u8"
 					//mediaURL: _app.fileURL("app/native/assets/media/VID_00000007.mp4")
-					mediaURL: _app.fileURL("app/native/assets/media/Demo_1080i_CC.ts")
+					//mediaURL: _app.fileURL("app/native/assets/media/Demo_1080i_CC.ts")
 					//mediaURL: _app.fileURL("app/native/assets/media/waterfallVideo_CC.mov")
 					//captionFileURL: _app.fileURL("app/native/assets/media/waterfall_sample.ttml")
+					subpictureIndex: 63
+					//subpictureIndex: -1
 					showCaptions: true
 					
 					topPadding: 50
