@@ -319,7 +319,6 @@ class Q_DECL_EXPORT Graphics2D : public Graphics {
 
 Q_OBJECT
 
-
 public:
 	Graphics2D(int display, Graphics2D* master = NULL);
 	virtual ~Graphics2D();

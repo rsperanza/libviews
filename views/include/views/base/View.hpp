@@ -76,6 +76,9 @@ class Q_DECL_EXPORT View : public QObject {
 	Q_PROPERTY(int  width    READ width   WRITE setWidth)
 	Q_PROPERTY(int  height   READ height  WRITE setHeight)
 	Q_PROPERTY(int  transparency READ transparency WRITE setTransparency)
+    Q_PROPERTY(int  sourceWidth    READ sourceWidth   WRITE setSourceWidth)
+    Q_PROPERTY(int  sourceHeight   READ sourceHeight  WRITE setSourceHeight)
+    Q_PROPERTY(int  format   READ format  WRITE setFormat)
 	Q_PROPERTY(QString  windowID READ windowID WRITE setWindowID)
 	Q_PROPERTY(QString  windowGroup READ windowGroup WRITE setWindowGroup)
 	Q_PROPERTY(bool  createWindowGroup READ createWindowGroup WRITE setCreateWindowGroup)
@@ -112,9 +115,12 @@ public:
 	int x();
 	int y();
 	int z();
-	int width();
-	int height();
-	int transparency();
+    int width();
+    int height();
+    int transparency();
+    int sourceWidth();
+    int sourceHeight();
+    int format();
 	QString windowID();
 	QString windowGroup();
 	bool createWindowGroup();
@@ -140,9 +146,6 @@ public:
 
 	void setPosition(int x, int y);
 	void setSize(int width, int height);
-
-	// TODO move to a different class for video interaction later
-	screen_window_t getScreenWindow();
 
 	// register Graphics class for rendering
 	void registerGraphics(Graphics *renderGraphics);
@@ -175,10 +178,13 @@ public Q_SLOTS:
 	void setAngle(int angle);
 	void setX(int x);
 	void setY(int y);
-	void setWidth(int width);
-	void setHeight(int height);
-	void setZ(int z);
-	void setTransparency(int transparency);
+    void setWidth(int width);
+    void setHeight(int height);
+    void setZ(int z);
+    void setTransparency(int transparency);
+    void setSourceWidth(int sourceWidth);
+    void setSourceHeight(int sourceHeight);
+    void setFormat(int format);
 
 	void setWindowID(const QString id);
 	void setWindowGroup(const QString &group);
@@ -188,6 +194,12 @@ public Q_SLOTS:
 
 	virtual void onRegenerated() {};
 	ImageData* getRenderedImage();
+
+
+    // TODO move to a private class later
+    screen_window_t getScreenWindow();
+    screen_buffer_t screenBuffer(int index);
+    void copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int stride, int uvStride);
 
 protected:
 	virtual void handleScreenEvent(bps_event_t *event);
@@ -213,10 +225,23 @@ protected:
 	int _x;
 	int _y;
 	int _z;
-	int _width;
-	int _height;
-	int _interval;
-	int _transparency;
+    int _width;
+    int _height;
+    int _interval;
+    int _transparency;
+    int _sourceWidth;
+    int _sourceHeight;
+    int _format;
+
+    // probably move to NativeWindow
+    screen_pixmap_t _screenPixmap;
+    screen_buffer_t _screenPixmapBuffer;
+    unsigned char* _screenPixmapBufferPtr;
+    unsigned char* _copyBuffer;
+    uint64_t _bufferSize;
+    int _bufferRows;
+    int _bufferStride;
+    int _bufferUVStride;
 
 	// window group / ID
 	bool _createFullWindow;

@@ -40,14 +40,19 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 	_z = 0;
 	_width = 0;
 	_height = 0;
-	_interval = 0;
+    _interval = 0;
 	_transparency = SCREEN_TRANSPARENCY_NONE;
 	_renderCount = 0;
+
+    _sourceWidth = 0;
+    _sourceHeight = 0;
+    _format = SCREEN_FORMAT_RGBA8888;
 
 	_createGroup = false;
 	_createFullWindow = false;
 
 	_renderGraphics = NULL;
+	_copyBuffer = NULL;
 
 	_nativeWindow = NULL;
 	_screenWindow = NULL;
@@ -87,9 +92,47 @@ int View::initialize()
 		}
 	}
 
-    _nativeWindow->setSize(_width, _height);
+	if (_sourceWidth == 0) {
+	    _nativeWindow->setSize(_width, _height, _width, _height);
+	} else {
+        _nativeWindow->setSize(_width, _height, _sourceWidth, _sourceHeight);
+	}
+    _nativeWindow->setFormat(_format);
+
+    if (_sourceWidth > 0) {
+        screen_create_pixmap(&_screenPixmap, _nativeWindow->getScreenContext());
+
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_FORMAT, &_format);
+
+        int usage = SCREEN_USAGE_WRITE | SCREEN_USAGE_NATIVE;
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_USAGE, &usage);
+
+        int size[2] = { _sourceWidth, _sourceHeight };
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_BUFFER_SIZE, size);
+
+        screen_create_pixmap_buffer(_screenPixmap);
+        screen_get_pixmap_property_pv(_screenPixmap, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)&_screenPixmapBuffer);
+
+        screen_get_buffer_property_pv(_screenPixmapBuffer, SCREEN_PROPERTY_POINTER, (void **)&_screenPixmapBufferPtr);
+        int stride;
+        screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &stride);
+
+        screen_buffer_t screenBuffers[2], frontBuffer;
+        screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)screenBuffers);
+        screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_FRONT_BUFFER, (void **)&frontBuffer);
+
+        screen_buffer_t nextBuffer = screenBuffers[0];
+        if (nextBuffer == frontBuffer) {
+            nextBuffer = screenBuffers[1];
+        }
+
+        memset(_screenPixmapBufferPtr, 0, stride*_sourceHeight);
+        memset(_screenPixmapBufferPtr+stride*_sourceHeight, 0, stride*(_sourceHeight/2));
+    }
+
     _nativeWindow->setZ(_z);
     _nativeWindow->setTransparency(_transparency);
+
     _nativeWindow->setWindowGroup(_group);
     _nativeWindow->setCreateWindowGroup(_createGroup);
     _nativeWindow->setWindowID(_id);
@@ -97,7 +140,7 @@ int View::initialize()
     returnCode = _nativeWindow->initialize(_createFullWindow);
     if (returnCode == EXIT_SUCCESS) {
     	_screenWindow = _nativeWindow->getScreenWindow();
-		qDebug() << "VideoView::initialize: video_window: " << (int)_screenWindow;
+		qDebug() << "View::initialize: _screenWindow: " << (int)_screenWindow;
 
         if (_renderGraphics) {
         	returnCode = _renderGraphics->initialize(_screenWindow);
@@ -350,6 +393,35 @@ void View::setTransparency(int transparency)
 	_transparency = transparency;
 }
 
+
+int View::sourceWidth() {
+    return _sourceWidth;
+}
+
+void View::setSourceWidth(int sourceWidth)
+{
+    _sourceWidth = sourceWidth;
+}
+
+int View::sourceHeight() {
+    return _sourceHeight;
+}
+
+void View::setSourceHeight(int sourceHeight)
+{
+    _sourceHeight = sourceHeight;
+}
+
+int View::format()
+{
+    return _format;
+}
+
+void View::setFormat(int format)
+{
+    _format = format;
+}
+
 QString View::windowID()
 {
 	return _id;
@@ -390,11 +462,6 @@ void View::setCreateFullWindow(bool create)
 	_createFullWindow = create;
 }
 
-screen_window_t View::getScreenWindow()
-{
-	return _screenWindow;
-}
-
 int View::regenerate() {
 	qDebug()  << "View::regenerate: ";
 
@@ -405,7 +472,7 @@ int View::regenerate() {
 
 		_nativeWindow->setPosition(_x, _y);
 
-		_nativeWindow->setSize(_width, _height);
+		_nativeWindow->setSize(_width, _height, _sourceWidth, _sourceHeight);
 
 		_nativeWindow->setZ(_z);
 
@@ -443,6 +510,50 @@ void View::renderView()
 
 			// after rendering this view is no longer stale
 			setStale(false);
+		} else {
+		    int rect[4] = { 0, 0 };
+		    screen_get_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, rect+2);
+
+		   int hg[] = {
+		        SCREEN_BLIT_SOURCE_WIDTH, _sourceWidth,
+		        SCREEN_BLIT_SOURCE_HEIGHT, _sourceHeight,
+		        SCREEN_BLIT_DESTINATION_X, 0,
+		        SCREEN_BLIT_DESTINATION_Y, 0,
+		        SCREEN_BLIT_DESTINATION_WIDTH, _sourceWidth,
+		        SCREEN_BLIT_DESTINATION_HEIGHT, _sourceHeight,
+		        //SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_NONE,
+		        //SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_SOURCE_OVER,
+		        SCREEN_BLIT_END
+		    };
+
+		    screen_buffer_t screenBuffers[2], frontBuffer;
+		    screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)screenBuffers);
+		    screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_FRONT_BUFFER, (void **)&frontBuffer);
+
+	        int stride;
+	        screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &stride);
+
+		    screen_buffer_t nextBuffer = screenBuffers[0];
+		    if (nextBuffer == frontBuffer) {
+		        nextBuffer = screenBuffers[1];
+		    }
+
+            _viewMutex.lock();
+
+           if (_copyBuffer) {
+                if (_format == SCREEN_FORMAT_NV12) {
+                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*stride);
+                    for(int index = 0; index < (_bufferRows-1); index++) {
+                        memcpy(_screenPixmapBufferPtr + _bufferRows*stride + index*stride/2, _copyBuffer + _bufferRows*_bufferStride + index*_bufferUVStride/2, stride/2);
+                    }
+                }
+            }
+
+            _viewMutex.unlock();
+
+		    screen_blit(_nativeWindow->getScreenContext(), nextBuffer, _screenPixmapBuffer, hg);
+
+		    screen_post_window(_screenWindow, nextBuffer, 1, rect, 0);
 		}
 
 		bool isVisible = false;
@@ -818,6 +929,62 @@ ImageData* View::getRenderedImage()
 {
 	return _renderGraphics->getRenderedImage();
 }
+
+
+
+screen_window_t View::getScreenWindow()
+{
+    return _screenWindow;
+}
+
+screen_buffer_t View::screenBuffer(int index)
+{
+    return _nativeWindow->screenBuffer(index);
+}
+
+void View::copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int stride, int uvStride)
+{
+    qDebug()  << "View::copyBufferFrom: " << incomingBuffer << " : " << frameSize << " : " << rows << " : " << stride << " : " << uvStride;
+
+    _viewMutex.lock();
+
+    if (_copyBuffer) {
+        free(_copyBuffer);
+    }
+
+    _bufferRows = rows;
+    _bufferStride = stride;
+    _bufferUVStride = uvStride;
+    _bufferSize = frameSize;
+    _copyBuffer = (unsigned char*)incomingBuffer;
+
+    _viewMutex.unlock();
+
+    qDebug()  << "View::copyBufferFrom: done";
+}
+
+/*
+
+
+The stride is the number of bytes between pixels on different rows, represented by the stride variable. If a pixel at position (x,y) is at ptr, the pixel at location (x, y+1) will be at (ptr + stride). Because you set write and native usage, there's no guarantee that each line is 400 bytes in this case. Drivers often have constraints that require the stride to be larger than width * bytes per pixel.
+
+int stride = 0;
+screen_get_buffer_property_iv(screen_pbuf, SCREEN_PROPERTY_STRIDE, &stride);
+
+
+Rather than load an image, as a real application might at this stage, the hourglass is simple enough to calculate. The calculation adjusts the alpha channel to be transparent or opaque based on a test that determines whether a pixel is inside or outside the hourglass.
+
+for (i = 0; i < size[1]; i++, ptr += stride) {
+    for (j = 0; j < size[0]; j++) {
+        ptr[j*4] = 0xa0;
+        ptr[j*4+1] = 0xa0;
+        ptr[j*4+2] = 0xa0;
+        ptr[j*4+3] = ((j >= i && j <= size[1]-i) || (j <= i && j >= size[1]-i)) ? 0xff : 0;
+    }
+}
+
+ */
+
 
 
 	} /* end namespace base */

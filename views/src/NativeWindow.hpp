@@ -52,13 +52,16 @@ public:
 	// view settings
 	void setAngle(int angle);
 	void setPosition(int x, int y);
-	void setSize(int width, int height);
+	void setSize(int width, int height, int sourceWidth, int sourceHeight);
+    void setFormat(int format);
 	void setZ(int z);
 	void setTransparency(int transparency);
 
 	void setWindowGroup(const QString &group);
 	void setCreateWindowGroup(bool create);
 	void setWindowID(const QString id);
+
+	screen_buffer_t screenBuffer(int index);
 
 	/**
 	 * @return dpi for current screen
@@ -79,7 +82,8 @@ protected:
 	int setWindowZ(int z);
 	int setWindowSourceSize(int width, int height);
 	int setWindowBufferSize(int width, int height);
-	int setWindowTransparency(int transparency);
+    int setWindowTransparency(int transparency);
+    int setWindowFormat(int format);
 	int setWindowUsage(int usage);
 
 	// window group / ID calls
@@ -96,7 +100,10 @@ protected:
 	int _interval;
 	int _transparency;
 	int _nbuffers;
-	int _usage;
+    int _sourceWidth;
+    int _sourceHeight;
+    int _format;
+    int _usage;
 
 	// window group / ID
 	bool _createGroup;
@@ -104,6 +111,8 @@ protected:
 	QString _id;
 
 	// screens / windows
+    screen_buffer_t _screenBuffers[2];
+
 	screen_window_t        _screenWindow;
 	screen_display_t       _screenDisplay;
 

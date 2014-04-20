@@ -176,9 +176,9 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 			}
 
 			bool addView = false;
-			if (view->width() == 0 && view->height() == 0) {
+			//if (view->width() == 0 && view->height() == 0) {
 				addView = true;
-			}
+			//}
 
 			if (view->display() == DISPLAY_DEVICE) {
 				view->setPosition(controlFrame.x(), controlFrame.y());

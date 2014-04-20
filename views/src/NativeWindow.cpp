@@ -41,7 +41,10 @@ NativeWindow::NativeWindow(ViewDisplay display) : _display(display)
 	_height = 0;
 	_interval = 0;
 	_transparency = SCREEN_TRANSPARENCY_NONE;
+    _format = SCREEN_FORMAT_RGBA8888;
 	_nbuffers = 2;
+    _screenBuffers[0] = NULL;
+    _screenBuffers[1] = NULL;
 
 	_createGroup = false;
 }
@@ -124,8 +127,7 @@ int NativeWindow::initialize(bool _createFullWindow)
 	qDebug()  << "NativeWindow::initialize: "<< _screenContext << ":" << _screenWindow;
 
 
-	int format = SCREEN_FORMAT_RGBA8888;
-	returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_FORMAT, &format);
+    returnCode = setWindowFormat(_format);
 	if (returnCode) {
 		perror("screen_set_window_property_iv(SCREEN_PROPERTY_FORMAT)");
 		return EXIT_FAILURE;
@@ -276,17 +278,19 @@ void NativeWindow::setPosition(int x, int y)
 	}
 }
 
-void NativeWindow::setSize(int width, int height)
+void NativeWindow::setSize(int width, int height, int sourceWidth, int sourceHeight)
 {
-	_width = width;
-	_height = height;
+    _width = width;
+    _height = height;
+    _sourceWidth = sourceWidth;
+    _sourceHeight = sourceHeight;
 
 	int returnCode = setWindowSize(_width, _height);
 	if (returnCode) {
 		perror("window size");
 	}
 
-	returnCode = setWindowSourceSize(_width, _height);
+	returnCode = setWindowSourceSize(_sourceWidth, _sourceHeight);
 	if (returnCode) {
 		perror("source size");
 	}
@@ -310,12 +314,22 @@ void NativeWindow::setZ(int z)
 
 void NativeWindow::setTransparency(int transparency)
 {
-	_transparency = transparency;
+    _transparency = transparency;
 
-	int returnCode = setWindowTransparency(_transparency);
-	if (returnCode) {
-		perror("window transparency");
-	}
+    int returnCode = setWindowTransparency(_transparency);
+    if (returnCode) {
+        perror("window transparency");
+    }
+}
+
+void NativeWindow::setFormat(int format)
+{
+    _format = format;
+
+    int returnCode = setWindowFormat(_format);
+    if (returnCode) {
+        perror("window format");
+    }
 }
 
 void NativeWindow::setWindowGroup(const QString &group)
@@ -400,15 +414,29 @@ int NativeWindow::setWindowZ(int z)
 
 int NativeWindow::setWindowTransparency(int transparency)
 {
-	int returnCode = EXIT_SUCCESS;
+    int returnCode = EXIT_SUCCESS;
 
-	if (_screenWindow != NULL) {
-		returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_TRANSPARENCY, &transparency);
-	} else {
-		returnCode = EXIT_SUCCESS;
-	}
+    if (_screenWindow != NULL) {
+        returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_TRANSPARENCY, &transparency);
+    } else {
+        returnCode = EXIT_SUCCESS;
+    }
 
-	return returnCode;
+    return returnCode;
+}
+
+int NativeWindow::setWindowFormat(int format)
+{
+    int returnCode = EXIT_SUCCESS;
+
+    if (_screenWindow != NULL) {
+        returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_FORMAT, &format);
+        qDebug()  << "NativeWindow::setWindowFormat: " << format << ":" << returnCode;
+    } else {
+        returnCode = EXIT_SUCCESS;
+    }
+
+    return returnCode;
 }
 
 int NativeWindow::setWindowUsage(int usage)
@@ -678,6 +706,17 @@ int NativeWindow::updateScreen()
 
 	return returnCode;
 }
+
+
+screen_buffer_t NativeWindow::screenBuffer(int index)
+{
+    if (_screenWindow != NULL) {
+        screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)_screenBuffers);
+    }
+
+    return _screenBuffers[index];
+}
+
 
 	} /* end namespace base */
 
