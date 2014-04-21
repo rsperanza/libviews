@@ -76,9 +76,13 @@ class Q_DECL_EXPORT View : public QObject {
 	Q_PROPERTY(int  width    READ width   WRITE setWidth)
 	Q_PROPERTY(int  height   READ height  WRITE setHeight)
 	Q_PROPERTY(int  transparency READ transparency WRITE setTransparency)
+    Q_PROPERTY(int  bufferWidth    READ bufferWidth   WRITE setBufferWidth)
+    Q_PROPERTY(int  bufferHeight   READ bufferHeight  WRITE setBufferHeight)
+    Q_PROPERTY(int  format   READ format  WRITE setFormat)
+    Q_PROPERTY(int  sourceX        READ sourceX       WRITE setSourceX)
+    Q_PROPERTY(int  sourceY        READ sourceY       WRITE setSourceY)
     Q_PROPERTY(int  sourceWidth    READ sourceWidth   WRITE setSourceWidth)
     Q_PROPERTY(int  sourceHeight   READ sourceHeight  WRITE setSourceHeight)
-    Q_PROPERTY(int  format   READ format  WRITE setFormat)
 	Q_PROPERTY(QString  windowID READ windowID WRITE setWindowID)
 	Q_PROPERTY(QString  windowGroup READ windowGroup WRITE setWindowGroup)
 	Q_PROPERTY(bool  createWindowGroup READ createWindowGroup WRITE setCreateWindowGroup)
@@ -118,9 +122,13 @@ public:
     int width();
     int height();
     int transparency();
+    int bufferWidth();
+    int bufferHeight();
+    int format();
+    int sourceX();
+    int sourceY();
     int sourceWidth();
     int sourceHeight();
-    int format();
 	QString windowID();
 	QString windowGroup();
 	bool createWindowGroup();
@@ -182,6 +190,10 @@ public Q_SLOTS:
     void setHeight(int height);
     void setZ(int z);
     void setTransparency(int transparency);
+    void setBufferWidth(int bufferWidth);
+    void setBufferHeight(int bufferHeight);
+    void setSourceX(int sourceX);
+    void setSourceY(int sourceY);
     void setSourceWidth(int sourceWidth);
     void setSourceHeight(int sourceHeight);
     void setFormat(int format);
@@ -199,7 +211,7 @@ public Q_SLOTS:
     // TODO move to a private class later
     screen_window_t getScreenWindow();
     screen_buffer_t screenBuffer(int index);
-    void copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int stride, int uvStride);
+    void copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride);
 
 protected:
 	virtual void handleScreenEvent(bps_event_t *event);
@@ -229,17 +241,24 @@ protected:
     int _height;
     int _interval;
     int _transparency;
+    int _format;
+    int _bufferWidth;
+    int _bufferHeight;
+
+    int _sourceX;
+    int _sourceY;
     int _sourceWidth;
     int _sourceHeight;
-    int _format;
 
     // probably move to NativeWindow
     screen_pixmap_t _screenPixmap;
     screen_buffer_t _screenPixmapBuffer;
     unsigned char* _screenPixmapBufferPtr;
+    int _pixmapStride;
     unsigned char* _copyBuffer;
     uint64_t _bufferSize;
     int _bufferRows;
+    int _bufferRowSize;
     int _bufferStride;
     int _bufferUVStride;
 

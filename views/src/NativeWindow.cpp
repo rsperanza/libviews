@@ -39,6 +39,8 @@ NativeWindow::NativeWindow(ViewDisplay display) : _display(display)
 	_y = 0;
 	_width = 0;
 	_height = 0;
+    _bufferWidth = 0;
+    _sourceWidth = 0;
 	_interval = 0;
 	_transparency = SCREEN_TRANSPARENCY_NONE;
     _format = SCREEN_FORMAT_RGBA8888;
@@ -180,17 +182,27 @@ int NativeWindow::initialize(bool _createFullWindow)
 		return EXIT_FAILURE;
 	}
 
-	returnCode = setWindowSourceSize(_width, _height);
-	if (returnCode) {
-		perror("source size");
-		return EXIT_FAILURE;
+	if (_sourceWidth > 0) {
+        returnCode = setWindowSourcePosition(_sourceX, _sourceY);
+        if (returnCode) {
+            perror("source size");
+            return EXIT_FAILURE;
+        }
+
+        returnCode = setWindowSourceSize(_sourceWidth, _sourceHeight);
+        if (returnCode) {
+            perror("source size");
+            return EXIT_FAILURE;
+        }
 	}
 
-	returnCode = setWindowBufferSize(_width, _height);
-	if (returnCode) {
-		perror("buffer size");
-		return EXIT_FAILURE;
-	}
+    if (_bufferWidth > 0) {
+        returnCode = setWindowBufferSize(_bufferWidth, _bufferHeight);
+        if (returnCode) {
+            perror("buffer size");
+            return EXIT_FAILURE;
+        }
+    }
 
 	returnCode = setWindowAngle(_angle);
 	if (returnCode) {
@@ -234,24 +246,6 @@ int NativeWindow::initialize(bool _createFullWindow)
 
 	return EXIT_SUCCESS;
 }
-/*
-ViewDisplay NativeWindow::display()
-{
-	return _display;
-}
-
-void NativeWindow::setDisplay(ViewDisplay display)
-{
-	_display = display;
-
-	qDebug()  << "NativeWindow::setDisplay: "<< _display;
-}
-
-void NativeWindow::setScreenContext(screen_context_t screen_ctx)
-{
-    _screenContext = screen_ctx;
-}
-*/
 
 void NativeWindow::setAngle(int angle)
 {
@@ -278,27 +272,48 @@ void NativeWindow::setPosition(int x, int y)
 	}
 }
 
-void NativeWindow::setSize(int width, int height, int sourceWidth, int sourceHeight)
+void NativeWindow::setSize(int width, int height)
 {
     _width = width;
     _height = height;
+
+    int returnCode = setWindowSize(_width, _height);
+    if (returnCode) {
+        perror("window size");
+    }
+}
+
+void NativeWindow::setBufferSize(int bufferWidth, int bufferHeight)
+{
+    _bufferWidth = bufferWidth;
+    _bufferHeight = bufferHeight;
+
+    int returnCode = setWindowBufferSize(_bufferWidth, _bufferHeight);
+    if (returnCode) {
+        perror("buffer size");
+    }
+}
+
+void NativeWindow::setSourcePosition(int x, int y)
+{
+    _x = x;
+    _y = y;
+
+    int returnCode = setWindowSourcePosition(_x, _y);
+    if (returnCode) {
+        perror("source position");
+    }
+}
+
+void NativeWindow::setSourceSize(int sourceWidth, int sourceHeight)
+{
     _sourceWidth = sourceWidth;
     _sourceHeight = sourceHeight;
 
-	int returnCode = setWindowSize(_width, _height);
-	if (returnCode) {
-		perror("window size");
-	}
-
-	returnCode = setWindowSourceSize(_sourceWidth, _sourceHeight);
-	if (returnCode) {
-		perror("source size");
-	}
-
-	returnCode = setWindowBufferSize(_width, _height);
-	if (returnCode) {
-		perror("buffer size");
-	}
+    int returnCode = setWindowSourceSize(_sourceWidth, sourceHeight);
+    if (returnCode) {
+        perror("source size");
+    }
 }
 
 void NativeWindow::setZ(int z)
@@ -452,6 +467,40 @@ int NativeWindow::setWindowUsage(int usage)
 	return returnCode;
 }
 
+int NativeWindow::setWindowBufferSize(int width, int height)
+{
+    int returnCode = EXIT_SUCCESS;
+    int size[2];
+
+    if (_screenWindow != NULL) {
+        size[0] = width;
+        size[1] = height;
+
+        returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, size);
+    } else {
+        returnCode = EXIT_SUCCESS;
+    }
+
+    return returnCode;
+}
+
+int NativeWindow::setWindowSourcePosition(int x, int y)
+{
+    int returnCode = EXIT_SUCCESS;
+    int position[2];
+
+    if (_screenWindow != NULL) {
+        position[0] = x;
+        position[1] = y;
+
+        returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_SOURCE_POSITION, position);
+    } else {
+        returnCode = EXIT_SUCCESS;
+    }
+
+    return returnCode;
+}
+
 int NativeWindow::setWindowSourceSize(int width, int height)
 {
 	int returnCode = EXIT_SUCCESS;
@@ -462,23 +511,6 @@ int NativeWindow::setWindowSourceSize(int width, int height)
 		size[1] = height;
 
 		returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_SOURCE_SIZE, size);
-	} else {
-		returnCode = EXIT_SUCCESS;
-	}
-
-	return returnCode;
-}
-
-int NativeWindow::setWindowBufferSize(int width, int height)
-{
-	int returnCode = EXIT_SUCCESS;
-	int size[2];
-
-	if (_screenWindow != NULL) {
-		size[0] = width;
-		size[1] = height;
-
-		returnCode = screen_set_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, size);
 	} else {
 		returnCode = EXIT_SUCCESS;
 	}

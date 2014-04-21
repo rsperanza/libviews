@@ -52,7 +52,10 @@ public:
 	// view settings
 	void setAngle(int angle);
 	void setPosition(int x, int y);
-	void setSize(int width, int height, int sourceWidth, int sourceHeight);
+    void setSize(int width, int height);
+    void setSourcePosition(int x, int y);
+    void setSourceSize(int sourceWidth, int sourceHeight);
+    void setBufferSize(int bufferWidth, int bufferHeight);
     void setFormat(int format);
 	void setZ(int z);
 	void setTransparency(int transparency);
@@ -80,8 +83,9 @@ protected:
 	int setWindowPosition(int x, int y);
 	int setWindowSize(int width, int height);
 	int setWindowZ(int z);
-	int setWindowSourceSize(int width, int height);
 	int setWindowBufferSize(int width, int height);
+    int setWindowSourcePosition(int x, int y);
+    int setWindowSourceSize(int width, int height);
     int setWindowTransparency(int transparency);
     int setWindowFormat(int format);
 	int setWindowUsage(int usage);
@@ -100,6 +104,10 @@ protected:
 	int _interval;
 	int _transparency;
 	int _nbuffers;
+    int _bufferWidth;
+    int _bufferHeight;
+    int _sourceX;
+    int _sourceY;
     int _sourceWidth;
     int _sourceHeight;
     int _format;

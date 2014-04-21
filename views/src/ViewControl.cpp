@@ -120,14 +120,14 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 
 			addView(view);
 
-			if (_viewsToResize.indexOf(view) < 0 && view->display() == DISPLAY_DEVICE) {
+			if (_viewsToResize.indexOf(view) < 0 && view->display() == DISPLAY_DEVICE && view->width() == 0 && view->height() == 0) {
 				addViewToResize(view);
 			}
 			if (_touchEventViews.indexOf(view) < 0) {
 				addTouchEventView(view);
 			}
 
-			if (view->z() > 0 && view->width() > 0 && view->height() > 0 && view->display() == DISPLAY_DEVICE) {
+			if (view->width() > 0 && view->height() > 0 && view->display() == DISPLAY_DEVICE) {
 				if (view->enabled() == false) {
 					view->setWindowGroup(windowGroup());
 				}
@@ -176,11 +176,11 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 			}
 
 			bool addView = false;
-			//if (view->width() == 0 && view->height() == 0) {
+			if (view->width() == 0 && view->height() == 0) {
 				addView = true;
-			//}
+			}
 
-			if (view->display() == DISPLAY_DEVICE) {
+			if (view->width() == 0 && view->height() == 0 && view->display() == DISPLAY_DEVICE) {
 				view->setPosition(controlFrame.x(), controlFrame.y());
 				view->setSize(controlFrame.width(), controlFrame.height());
 			}

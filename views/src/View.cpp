@@ -44,6 +44,10 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 	_transparency = SCREEN_TRANSPARENCY_NONE;
 	_renderCount = 0;
 
+    _sourceX = 0;
+    _sourceY = 0;
+    _bufferWidth = 0;
+    _bufferHeight = 0;
     _sourceWidth = 0;
     _sourceHeight = 0;
     _format = SCREEN_FORMAT_RGBA8888;
@@ -92,43 +96,26 @@ int View::initialize()
 		}
 	}
 
-	if (_sourceWidth == 0) {
-	    _nativeWindow->setSize(_width, _height, _width, _height);
-	} else {
-        _nativeWindow->setSize(_width, _height, _sourceWidth, _sourceHeight);
-	}
-    _nativeWindow->setFormat(_format);
-
-    if (_sourceWidth > 0) {
-        screen_create_pixmap(&_screenPixmap, _nativeWindow->getScreenContext());
-
-        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_FORMAT, &_format);
-
-        int usage = SCREEN_USAGE_WRITE | SCREEN_USAGE_NATIVE;
-        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_USAGE, &usage);
-
-        int size[2] = { _sourceWidth, _sourceHeight };
-        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_BUFFER_SIZE, size);
-
-        screen_create_pixmap_buffer(_screenPixmap);
-        screen_get_pixmap_property_pv(_screenPixmap, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)&_screenPixmapBuffer);
-
-        screen_get_buffer_property_pv(_screenPixmapBuffer, SCREEN_PROPERTY_POINTER, (void **)&_screenPixmapBufferPtr);
-        int stride;
-        screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &stride);
-
-        screen_buffer_t screenBuffers[2], frontBuffer;
-        screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)screenBuffers);
-        screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_FRONT_BUFFER, (void **)&frontBuffer);
-
-        screen_buffer_t nextBuffer = screenBuffers[0];
-        if (nextBuffer == frontBuffer) {
-            nextBuffer = screenBuffers[1];
-        }
-
-        memset(_screenPixmapBufferPtr, 0, stride*_sourceHeight);
-        memset(_screenPixmapBufferPtr+stride*_sourceHeight, 0, stride*(_sourceHeight/2));
+    _nativeWindow->setSize(_width, _height);
+    if (_bufferWidth == 0) {
+        _bufferWidth = _width;
+        _bufferHeight = _height;
+        _sourceWidth = _bufferWidth;
+        _sourceHeight = _bufferHeight;
     }
+    if (_bufferWidth > 0) {
+        _sourceWidth = _bufferWidth;
+        _sourceHeight = _bufferHeight;
+    }
+    _nativeWindow->setBufferSize(_width, _height);
+    //_nativeWindow->setBufferSize(_bufferWidth, _bufferHeight);
+
+    //_nativeWindow->setSourcePosition(_sourceX, _sourceY);
+    //_nativeWindow->setSourceSize(_sourceWidth, _sourceHeight);
+
+    qDebug()  << "View: initialize: window: " << _x << "," << _y << " " << _width << "x" << _height << " " << _bufferWidth << "x" << _bufferHeight << " source: " << _sourceX << "," << _sourceY << " " << _sourceWidth << "x" << _sourceHeight;
+
+    _nativeWindow->setFormat(_format);
 
     _nativeWindow->setZ(_z);
     _nativeWindow->setTransparency(_transparency);
@@ -144,6 +131,34 @@ int View::initialize()
 
         if (_renderGraphics) {
         	returnCode = _renderGraphics->initialize(_screenWindow);
+        }
+
+        if (_bufferWidth > 0) {
+            screen_create_pixmap(&_screenPixmap, _nativeWindow->getScreenContext());
+
+            screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_FORMAT, &_format);
+
+            int usage = SCREEN_USAGE_WRITE | SCREEN_USAGE_NATIVE;
+            screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_USAGE, &usage);
+
+            int size[2] = { _bufferWidth, _bufferHeight };
+            screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_BUFFER_SIZE, size);
+
+            screen_create_pixmap_buffer(_screenPixmap);
+            screen_get_pixmap_property_pv(_screenPixmap, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)&_screenPixmapBuffer);
+
+            screen_get_buffer_property_pv(_screenPixmapBuffer, SCREEN_PROPERTY_POINTER, (void **)&_screenPixmapBufferPtr);
+
+            screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &_pixmapStride);
+
+            qDebug() << "View::initialize: pixmap: " << _bufferWidth << " : " << _bufferHeight << " : " << _pixmapStride;
+
+            if (_format == SCREEN_FORMAT_RGBA8888) {
+                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*4);
+            } else
+            if (_format == SCREEN_FORMAT_NV12) {
+                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
+            }
         }
 
 	    if (returnCode == EXIT_SUCCESS) {
@@ -394,6 +409,44 @@ void View::setTransparency(int transparency)
 }
 
 
+int View::bufferWidth() {
+    return _bufferWidth;
+}
+
+void View::setBufferWidth(int bufferWidth)
+{
+    _bufferWidth = bufferWidth;
+}
+
+int View::bufferHeight() {
+    return _bufferHeight;
+}
+
+void View::setBufferHeight(int bufferHeight)
+{
+    _bufferHeight = bufferHeight;
+}
+
+int View::sourceX()
+{
+    return _sourceX;
+}
+
+void View::setSourceX(int sourceX)
+{
+    _sourceX = sourceX;
+}
+
+int View::sourceY()
+{
+    return _sourceY;
+}
+
+void View::setSourceY(int sourceY)
+{
+    _sourceY = sourceY;
+}
+
 int View::sourceWidth() {
     return _sourceWidth;
 }
@@ -471,11 +524,15 @@ int View::regenerate() {
 		_renderGraphics->regenerateCleanup();
 
 		_nativeWindow->setPosition(_x, _y);
+        _nativeWindow->setSize(_width, _height);
 
-		_nativeWindow->setSize(_width, _height, _sourceWidth, _sourceHeight);
+        //_nativeWindow->setBufferSize(_bufferWidth, _bufferHeight);
+        _nativeWindow->setBufferSize(_width, _height);
+
+        //_nativeWindow->setSourcePosition(_sourceX, _sourceY);
+        //_nativeWindow->setSourceSize(_sourceWidth, _sourceHeight);
 
 		_nativeWindow->setZ(_z);
-
 		_nativeWindow->setTransparency(_transparency);
 
 		_renderGraphics->regenerate(_screenWindow);
@@ -512,26 +569,22 @@ void View::renderView()
 			setStale(false);
 		} else {
 		    int rect[4] = { 0, 0 };
-		    screen_get_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, rect+2);
+		    screen_get_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, &rect[2]);
 
-		   int hg[] = {
-		        SCREEN_BLIT_SOURCE_WIDTH, _sourceWidth,
-		        SCREEN_BLIT_SOURCE_HEIGHT, _sourceHeight,
+		   int blitInfo[] = {
+		        SCREEN_BLIT_SOURCE_WIDTH, _bufferRowSize,
+		        SCREEN_BLIT_SOURCE_HEIGHT, _bufferRows,
 		        SCREEN_BLIT_DESTINATION_X, 0,
 		        SCREEN_BLIT_DESTINATION_Y, 0,
-		        SCREEN_BLIT_DESTINATION_WIDTH, _sourceWidth,
-		        SCREEN_BLIT_DESTINATION_HEIGHT, _sourceHeight,
-		        //SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_NONE,
-		        //SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_SOURCE_OVER,
+		        SCREEN_BLIT_DESTINATION_WIDTH, _width,
+                SCREEN_BLIT_DESTINATION_HEIGHT, _height,
+                SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_NONE,
 		        SCREEN_BLIT_END
 		    };
 
 		    screen_buffer_t screenBuffers[2], frontBuffer;
 		    screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)screenBuffers);
 		    screen_get_window_property_pv(_screenWindow, SCREEN_PROPERTY_FRONT_BUFFER, (void **)&frontBuffer);
-
-	        int stride;
-	        screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &stride);
 
 		    screen_buffer_t nextBuffer = screenBuffers[0];
 		    if (nextBuffer == frontBuffer) {
@@ -541,19 +594,24 @@ void View::renderView()
             _viewMutex.lock();
 
            if (_copyBuffer) {
+                if (_format == SCREEN_FORMAT_RGBA8888) {
+                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride*4);
+                } else
                 if (_format == SCREEN_FORMAT_NV12) {
-                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*stride);
+                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride);
                     for(int index = 0; index < (_bufferRows-1); index++) {
-                        memcpy(_screenPixmapBufferPtr + _bufferRows*stride + index*stride/2, _copyBuffer + _bufferRows*_bufferStride + index*_bufferUVStride/2, stride/2);
+                        memcpy(_screenPixmapBufferPtr + _bufferRows*_pixmapStride + index*_pixmapStride/2, _copyBuffer + _bufferRows*_bufferStride + index*_bufferUVStride/2, _pixmapStride/2);
                     }
                 }
             }
 
             _viewMutex.unlock();
 
-		    screen_blit(_nativeWindow->getScreenContext(), nextBuffer, _screenPixmapBuffer, hg);
+		    screen_blit(_nativeWindow->getScreenContext(), nextBuffer, _screenPixmapBuffer, blitInfo);
 
 		    screen_post_window(_screenWindow, nextBuffer, 1, rect, 0);
+
+		    //qDebug()  << "View::renderView: blit done ";
 		}
 
 		bool isVisible = false;
@@ -942,9 +1000,9 @@ screen_buffer_t View::screenBuffer(int index)
     return _nativeWindow->screenBuffer(index);
 }
 
-void View::copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int stride, int uvStride)
+void View::copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride)
 {
-    qDebug()  << "View::copyBufferFrom: " << incomingBuffer << " : " << frameSize << " : " << rows << " : " << stride << " : " << uvStride;
+    qDebug()  << "View::copyBufferFrom: " << incomingBuffer << " : " << frameSize << " : " << rows << " : " << rowSize << " : " << stride << " : " << uvStride;
 
     _viewMutex.lock();
 
@@ -953,6 +1011,7 @@ void View::copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, in
     }
 
     _bufferRows = rows;
+    _bufferRowSize = rowSize;
     _bufferStride = stride;
     _bufferUVStride = uvStride;
     _bufferSize = frameSize;
