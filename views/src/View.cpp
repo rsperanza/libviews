@@ -56,7 +56,6 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 	_createFullWindow = false;
 
 	_renderGraphics = NULL;
-	_copyBuffer = NULL;
 
 	_nativeWindow = NULL;
 	_screenWindow = NULL;
@@ -568,6 +567,8 @@ void View::renderView()
 			// after rendering this view is no longer stale
 			setStale(false);
 		} else {
+            _copyMutex.lock();
+
 		    int rect[4] = { 0, 0 };
 		    screen_get_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, &rect[2]);
 
@@ -578,7 +579,7 @@ void View::renderView()
 		        SCREEN_BLIT_DESTINATION_Y, 0,
 		        SCREEN_BLIT_DESTINATION_WIDTH, _width,
                 SCREEN_BLIT_DESTINATION_HEIGHT, _height,
-                SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_NONE,
+                SCREEN_BLIT_TRANSPARENCY, SCREEN_TRANSPARENCY_SOURCE_OVER,
 		        SCREEN_BLIT_END
 		    };
 
@@ -591,25 +592,11 @@ void View::renderView()
 		        nextBuffer = screenBuffers[1];
 		    }
 
-            _viewMutex.lock();
-
-           if (_copyBuffer) {
-                if (_format == SCREEN_FORMAT_RGBA8888) {
-                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride*4);
-                } else
-                if (_format == SCREEN_FORMAT_NV12) {
-                    memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride);
-                    for(int index = 0; index < (_bufferRows-1); index++) {
-                        memcpy(_screenPixmapBufferPtr + _bufferRows*_pixmapStride + index*_pixmapStride/2, _copyBuffer + _bufferRows*_bufferStride + index*_bufferUVStride/2, _pixmapStride/2);
-                    }
-                }
-            }
-
-            _viewMutex.unlock();
-
 		    screen_blit(_nativeWindow->getScreenContext(), nextBuffer, _screenPixmapBuffer, blitInfo);
 
 		    screen_post_window(_screenWindow, nextBuffer, 1, rect, 0);
+
+            _copyMutex.unlock();
 
 		    //qDebug()  << "View::renderView: blit done ";
 		}
@@ -1000,50 +987,67 @@ screen_buffer_t View::screenBuffer(int index)
     return _nativeWindow->screenBuffer(index);
 }
 
-void View::copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride)
+void View::copyBufferFrom(uint8_t* incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride, int uvOffset)
 {
     qDebug()  << "View::copyBufferFrom: " << incomingBuffer << " : " << frameSize << " : " << rows << " : " << rowSize << " : " << stride << " : " << uvStride;
 
-    _viewMutex.lock();
+    _copyMutex.lock();
 
-    if (_copyBuffer) {
-        free(_copyBuffer);
+    if (incomingBuffer) {
+        //free(_copyBuffer);
+
+        _bufferRows = rows;
+        _bufferRowSize = rowSize;
+
+       int y = 0;
+
+       uint8_t* src = incomingBuffer;
+       uint8_t* dst = _screenPixmapBufferPtr;
+
+        if (_format == SCREEN_FORMAT_RGBA8888) {
+            for (y=0;y<_bufferRows;y++) {
+                memcpy(dst, src, _bufferWidth*4);
+                src+=stride;
+                dst+=_pixmapStride;
+            }
+        } else
+        if (_format == SCREEN_FORMAT_NV12) {
+            //memset(dst, _bufferRows*_pixmapStride*1.5, 0);
+
+            for (y=0;y<_bufferRows;y++) {
+                memcpy(dst, src, _bufferWidth);
+                src+=stride;
+                dst+=_pixmapStride;
+            }
+
+            src = &incomingBuffer[uvOffset];
+            for (y=0;y<_bufferRows/2;y++) {
+               memcpy(dst, src, _bufferRowSize);
+                //memcpy(dst, src, _bufferWidth);
+               for (int x=0;x<_bufferRowSize;x+=2) {
+                   dst[x] = src[x];
+                   dst[x+1] = src[x+1];
+               }
+               src+=uvStride;
+               dst+=_pixmapStride;
+            }
+
+/*
+            memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride);
+            for(int index = 0; index < _bufferRows/2; index++) {
+                memcpy(_screenPixmapBufferPtr + _bufferRows*_pixmapStride + index*_pixmapStride/2, _copyBuffer +  + _bufferUVOffset + _bufferRows*_bufferStride + index*_bufferUVStride/2, _pixmapStride/2);
+            }
+
+            uint8_t* src = inbufptr;
+            uint8_t* dst = outbufptr;
+*/
+        }
     }
 
-    _bufferRows = rows;
-    _bufferRowSize = rowSize;
-    _bufferStride = stride;
-    _bufferUVStride = uvStride;
-    _bufferSize = frameSize;
-    _copyBuffer = (unsigned char*)incomingBuffer;
-
-    _viewMutex.unlock();
+    _copyMutex.unlock();
 
     qDebug()  << "View::copyBufferFrom: done";
 }
-
-/*
-
-
-The stride is the number of bytes between pixels on different rows, represented by the stride variable. If a pixel at position (x,y) is at ptr, the pixel at location (x, y+1) will be at (ptr + stride). Because you set write and native usage, there's no guarantee that each line is 400 bytes in this case. Drivers often have constraints that require the stride to be larger than width * bytes per pixel.
-
-int stride = 0;
-screen_get_buffer_property_iv(screen_pbuf, SCREEN_PROPERTY_STRIDE, &stride);
-
-
-Rather than load an image, as a real application might at this stage, the hourglass is simple enough to calculate. The calculation adjusts the alpha channel to be transparent or opaque based on a test that determines whether a pixel is inside or outside the hourglass.
-
-for (i = 0; i < size[1]; i++, ptr += stride) {
-    for (j = 0; j < size[0]; j++) {
-        ptr[j*4] = 0xa0;
-        ptr[j*4+1] = 0xa0;
-        ptr[j*4+2] = 0xa0;
-        ptr[j*4+3] = ((j >= i && j <= size[1]-i) || (j <= i && j >= size[1]-i)) ? 0xff : 0;
-    }
-}
-
- */
-
 
 
 	} /* end namespace base */

@@ -211,7 +211,7 @@ public Q_SLOTS:
     // TODO move to a private class later
     screen_window_t getScreenWindow();
     screen_buffer_t screenBuffer(int index);
-    void copyBufferFrom(screen_buffer_t incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride);
+    void copyBufferFrom(uint8_t* incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride, int uvOffset);
 
 protected:
 	virtual void handleScreenEvent(bps_event_t *event);
@@ -255,12 +255,8 @@ protected:
     screen_buffer_t _screenPixmapBuffer;
     unsigned char* _screenPixmapBufferPtr;
     int _pixmapStride;
-    unsigned char* _copyBuffer;
-    uint64_t _bufferSize;
     int _bufferRows;
     int _bufferRowSize;
-    int _bufferStride;
-    int _bufferUVStride;
 
 	// window group / ID
 	bool _createFullWindow;
@@ -270,8 +266,11 @@ protected:
 
 	screen_window_t _screenWindow;
 
-	// main mutex for controlling view access
-	QMutex _viewMutex;
+    // main mutex for controlling view access
+    QMutex _viewMutex;
+
+    // main mutex for controlling view access
+    QMutex _copyMutex;
 
 private:
 	void loadController(int index);
