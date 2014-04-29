@@ -153,7 +153,7 @@ int View::initialize()
             qDebug() << "View::initialize: pixmap: " << _bufferWidth << " : " << _bufferHeight << " : " << _pixmapStride;
 
             if (_format == SCREEN_FORMAT_RGBA8888) {
-                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*4);
+                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight);
             } else
             if (_format == SCREEN_FORMAT_NV12) {
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
@@ -994,8 +994,6 @@ void View::copyBufferFrom(uint8_t* incomingBuffer, uint64_t frameSize, int rows,
     _copyMutex.lock();
 
     if (incomingBuffer) {
-        //free(_copyBuffer);
-
         _bufferRows = rows;
         _bufferRowSize = rowSize;
 
@@ -1023,24 +1021,9 @@ void View::copyBufferFrom(uint8_t* incomingBuffer, uint64_t frameSize, int rows,
             src = &incomingBuffer[uvOffset];
             for (y=0;y<_bufferRows/2;y++) {
                memcpy(dst, src, _bufferRowSize);
-                //memcpy(dst, src, _bufferWidth);
-               for (int x=0;x<_bufferRowSize;x+=2) {
-                   dst[x] = src[x];
-                   dst[x+1] = src[x+1];
-               }
                src+=uvStride;
                dst+=_pixmapStride;
             }
-
-/*
-            memcpy(_screenPixmapBufferPtr, _copyBuffer, _bufferRows*_pixmapStride);
-            for(int index = 0; index < _bufferRows/2; index++) {
-                memcpy(_screenPixmapBufferPtr + _bufferRows*_pixmapStride + index*_pixmapStride/2, _copyBuffer +  + _bufferUVOffset + _bufferRows*_bufferStride + index*_bufferUVStride/2, _pixmapStride/2);
-            }
-
-            uint8_t* src = inbufptr;
-            uint8_t* dst = outbufptr;
-*/
         }
     }
 
