@@ -573,8 +573,8 @@ void View::renderView()
 		    screen_get_window_property_iv(_screenWindow, SCREEN_PROPERTY_BUFFER_SIZE, &rect[2]);
 
 		   int blitInfo[] = {
-		        SCREEN_BLIT_SOURCE_WIDTH, _bufferRowSize,
-		        SCREEN_BLIT_SOURCE_HEIGHT, _bufferRows,
+		        SCREEN_BLIT_SOURCE_WIDTH, _bufferWidth,
+		        SCREEN_BLIT_SOURCE_HEIGHT, _bufferHeight,
 		        SCREEN_BLIT_DESTINATION_X, 0,
 		        SCREEN_BLIT_DESTINATION_Y, 0,
 		        SCREEN_BLIT_DESTINATION_WIDTH, _width,
@@ -987,42 +987,67 @@ screen_buffer_t View::screenBuffer(int index)
     return _nativeWindow->screenBuffer(index);
 }
 
-void View::copyBufferFrom(uint8_t* incomingBuffer, uint64_t frameSize, int rows, int rowSize, int stride, int uvStride, int uvOffset)
+void View::copyBufferFrom(uint8_t** incomingBuffers, int incomingWidth, int incomingHeight, uint32_t* stride)
 {
-    qDebug()  << "View::copyBufferFrom: " << incomingBuffer << " : " << frameSize << " : " << rows << " : " << rowSize << " : " << stride << " : " << uvStride;
+    qDebug()  << "View::copyBufferFrom: " << incomingBuffers << " : " << incomingHeight << " : " << incomingWidth << " : " << stride;
+
+    if (_bufferWidth != incomingWidth || _bufferHeight != incomingHeight) {
+        qWarning()  << "View::copyBufferFrom: aborting copy as incoming dimensions and buffer dimensions differ ..";
+        return;
+    }
 
     _copyMutex.lock();
 
-    if (incomingBuffer) {
-        _bufferRows = rows;
-        _bufferRowSize = rowSize;
+    if (incomingBuffers) {
+        int y = 0;
 
-       int y = 0;
-
-       uint8_t* src = incomingBuffer;
-       uint8_t* dst = _screenPixmapBufferPtr;
+        uint8_t* src = incomingBuffers[0];
+        uint8_t* dst = _screenPixmapBufferPtr;
 
         if (_format == SCREEN_FORMAT_RGBA8888) {
-            for (y=0;y<_bufferRows;y++) {
+            for (y=0;y<_bufferHeight;y++) {
                 memcpy(dst, src, _bufferWidth*4);
-                src+=stride;
-                dst+=_pixmapStride;
+                src += stride[0];
+                dst += _pixmapStride;
             }
         } else
         if (_format == SCREEN_FORMAT_NV12) {
-            //memset(dst, _bufferRows*_pixmapStride*1.5, 0);
-
-            for (y=0;y<_bufferRows;y++) {
+            for (y=0;y<_bufferHeight;y++) {
                 memcpy(dst, src, _bufferWidth);
-                src+=stride;
-                dst+=_pixmapStride;
+                src += stride[0];
+                dst +=_pixmapStride;
             }
 
-            src = &incomingBuffer[uvOffset];
-            for (y=0;y<_bufferRows/2;y++) {
-               memcpy(dst, src, _bufferRowSize);
-               src+=uvStride;
-               dst+=_pixmapStride;
+            src = incomingBuffers[1];
+            for (y=0;y<_bufferHeight/2;y++) {
+               memcpy(dst, src, _bufferWidth);
+               src += stride[1];
+               dst += _pixmapStride;
+            }
+        } else
+        if (_format == SCREEN_FORMAT_YUV420) {
+            uint8_t *srcy = incomingBuffers[0];
+            uint8_t *srcu = incomingBuffers[1];
+            uint8_t *srcv = incomingBuffers[2];
+
+            for (y=0;y<_bufferHeight;y++) {
+                memcpy(dst, srcy, _bufferWidth);
+                srcy += stride[0];
+                dst  += _pixmapStride;
+            }
+
+            dst = _screenPixmapBufferPtr + (_bufferHeight * _pixmapStride);
+            for (y=0;y<_bufferHeight/2;y++) {
+               memcpy(dst, srcu, _bufferWidth/2);
+               srcu += stride[1];
+               dst += _pixmapStride / 2;
+            }
+
+            dst = _screenPixmapBufferPtr + (_bufferHeight * _pixmapStride) + (_bufferHeight * _pixmapStride) / 4;
+            for (y=0;y<_bufferHeight/2;y++) {
+               memcpy(dst, srcv, _bufferWidth/2);
+               srcu += stride[2];
+               dst += _pixmapStride / 2;
             }
         }
     }
