@@ -127,6 +127,14 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 				addTouchEventView(view);
 			}
 
+            if (view->enabled() == false && view->display() == DISPLAY_DEVICE) {
+                view->setWindowGroup(windowGroup());
+            }
+            if (view->windowID().size() == 0) {
+                _childID++;
+                view->setWindowID(windowId().append(QString("-child")).append(QString::number(_childID)));
+            }
+
 			if (view->width() > 0 && view->height() > 0 && view->display() == DISPLAY_DEVICE) {
 				if (view->enabled() == false) {
 					view->setWindowGroup(windowGroup());
@@ -167,13 +175,6 @@ void ViewControl::onControlFrameChanged(const QRectF &controlFrame) {
 	if (controlFrame.width() > 0 && controlFrame.height() > 0) {
 		for(int index = 0; index < _viewsToResize.size(); index++) {
 			View* view = _viewsToResize[index];
-			if (view->enabled() == false && view->display() == DISPLAY_DEVICE) {
-				view->setWindowGroup(windowGroup());
-			}
-			if (view->windowID().size() == 0) {
-				_childID++;
-				view->setWindowID(windowId().append(QString("-child")).append(QString::number(_childID)));
-			}
 
 			bool addView = false;
 			if (view->width() == 0 && view->height() == 0) {

@@ -61,6 +61,8 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 	_screenWindow = NULL;
 
 	_capture = false;
+
+	_screenPixmapBufferPtr = NULL;
 }
 
 View::~View() {
@@ -157,6 +159,9 @@ int View::initialize()
             } else
             if (_format == SCREEN_FORMAT_NV12) {
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
+            } else
+            if (_format == SCREEN_FORMAT_YUV420) {
+                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
             }
         }
 
@@ -186,6 +191,10 @@ void View::cleanup() {
 		delete _renderGraphics;
 		_renderGraphics = NULL;
 	}
+
+    if (_screenPixmap) {
+	    screen_destroy_pixmap(_screenPixmap);
+    }
 
 	if (_nativeWindow) {
 		delete _nativeWindow;
@@ -521,19 +530,60 @@ int View::regenerate() {
 		Graphics::lockRendering();
 
 		_renderGraphics->regenerateCleanup();
+	}
 
-		_nativeWindow->setPosition(_x, _y);
-        _nativeWindow->setSize(_width, _height);
+    _nativeWindow->setPosition(_x, _y);
+    _nativeWindow->setSize(_width, _height);
 
-        //_nativeWindow->setBufferSize(_bufferWidth, _bufferHeight);
-        _nativeWindow->setBufferSize(_width, _height);
+    //_nativeWindow->setBufferSize(_bufferWidth, _bufferHeight);
+    _nativeWindow->setBufferSize(_width, _height);
 
-        //_nativeWindow->setSourcePosition(_sourceX, _sourceY);
-        //_nativeWindow->setSourceSize(_sourceWidth, _sourceHeight);
+    //_nativeWindow->setSourcePosition(_sourceX, _sourceY);
+    //_nativeWindow->setSourceSize(_sourceWidth, _sourceHeight);
 
-		_nativeWindow->setZ(_z);
-		_nativeWindow->setTransparency(_transparency);
+    _nativeWindow->setZ(_z);
+    _nativeWindow->setTransparency(_transparency);
 
+
+    _copyMutex.lock();
+
+    if (_screenPixmapBufferPtr) {
+        screen_destroy_pixmap(_screenPixmap);
+        _screenPixmapBufferPtr = NULL;
+    }
+
+    if (_bufferWidth > 0) {
+        screen_create_pixmap(&_screenPixmap, _nativeWindow->getScreenContext());
+
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_FORMAT, &_format);
+
+        int usage = SCREEN_USAGE_WRITE | SCREEN_USAGE_NATIVE;
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_USAGE, &usage);
+
+        int size[2] = { _bufferWidth, _bufferHeight };
+        screen_set_pixmap_property_iv(_screenPixmap, SCREEN_PROPERTY_BUFFER_SIZE, size);
+
+        screen_create_pixmap_buffer(_screenPixmap);
+        screen_get_pixmap_property_pv(_screenPixmap, SCREEN_PROPERTY_RENDER_BUFFERS, (void **)&_screenPixmapBuffer);
+
+        screen_get_buffer_property_pv(_screenPixmapBuffer, SCREEN_PROPERTY_POINTER, (void **)&_screenPixmapBufferPtr);
+
+        screen_get_buffer_property_iv(_screenPixmapBuffer, SCREEN_PROPERTY_STRIDE, &_pixmapStride);
+
+        if (_format == SCREEN_FORMAT_RGBA8888) {
+            memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight);
+        } else
+        if (_format == SCREEN_FORMAT_NV12) {
+            memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
+        } else
+        if (_format == SCREEN_FORMAT_YUV420) {
+            memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
+        }
+    }
+
+    _copyMutex.unlock();
+
+    if (_renderGraphics) {
 		_renderGraphics->regenerate(_screenWindow);
 
 		Graphics::unlockRendering();
@@ -998,7 +1048,7 @@ void View::copyBufferFrom(uint8_t** incomingBuffers, int incomingWidth, int inco
 
     _copyMutex.lock();
 
-    if (incomingBuffers) {
+    if (incomingBuffers && _screenPixmapBufferPtr) {
         int y = 0;
 
         uint8_t* src = incomingBuffers[0];
@@ -1050,6 +1100,8 @@ void View::copyBufferFrom(uint8_t** incomingBuffers, int incomingWidth, int inco
                dst += _pixmapStride / 2;
             }
         }
+    } else {
+        qWarning() << "View::copyBufferFrom: skipping ... buffers not initialized ...";
     }
 
     _copyMutex.unlock();
