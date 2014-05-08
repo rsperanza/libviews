@@ -685,14 +685,7 @@ void View::renderView()
 
 			Graphics::unlockRendering();
 
-			if (_renderGraphics) {
-				_renderGraphics->cleanup();
-			}
-
-			if (_nativeWindow) {
-				delete _nativeWindow;
-				_nativeWindow = NULL;
-			}
+			cleanup();
 
 			setInitialized(false);
 		}
