@@ -1089,7 +1089,7 @@ void View::copyBufferFrom(uint8_t** incomingBuffers, int incomingWidth, int inco
             dst = _screenPixmapBufferPtr + (_bufferHeight * _pixmapStride) + (_bufferHeight * _pixmapStride) / 4;
             for (y=0;y<_bufferHeight/2;y++) {
                memcpy(dst, srcv, _bufferWidth/2);
-               srcu += stride[2];
+               srcv += stride[2];
                dst += _pixmapStride / 2;
             }
         }
