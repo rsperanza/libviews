@@ -255,6 +255,7 @@ protected:
     screen_buffer_t _screenPixmapBuffer;
     unsigned char* _screenPixmapBufferPtr;
     int _pixmapStride;
+    bool _bufferPopulated;
 
 	// window group / ID
 	bool _createFullWindow;

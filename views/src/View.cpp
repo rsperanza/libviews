@@ -63,6 +63,7 @@ View::View(ViewDisplay display) : QObject(ViewsThread::getInstance()), _display(
 	_capture = false;
 
 	_screenPixmapBufferPtr = NULL;
+	_bufferPopulated = false;
 }
 
 View::~View() {
@@ -158,11 +159,13 @@ int View::initialize()
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight);
             } else
             if (_format == SCREEN_FORMAT_NV12) {
-                memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
+                memset(_screenPixmapBufferPtr, 255, _pixmapStride*_sourceHeight*1.5);
             } else
             if (_format == SCREEN_FORMAT_YUV420) {
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
             }
+
+            _bufferPopulated = false;
         }
 
 	    if (returnCode == EXIT_SUCCESS) {
@@ -612,11 +615,7 @@ void View::renderView()
 		// if a Graphics class is registered, call it to render
 		if (_renderGraphics) {
 			_renderGraphics->renderSafe(_capture);
-			qDebug()  << "View::renderView: rendered ";
-
-			// after rendering this view is no longer stale
-			setStale(false);
-		} else {
+		} else if (_bufferPopulated) {
             _copyMutex.lock();
 
 		    int rect[4] = { 0, 0 };
@@ -650,6 +649,10 @@ void View::renderView()
 
 		    //qDebug()  << "View::renderView: blit done ";
 		}
+        qDebug()  << "View::renderView: rendered ";
+
+        // after rendering this view is no longer stale
+        setStale(false);
 
 		bool isVisible = false;
 
@@ -1093,6 +1096,10 @@ void View::copyBufferFrom(uint8_t** incomingBuffers, int incomingWidth, int inco
                dst += _pixmapStride / 2;
             }
         }
+
+        _bufferPopulated = true;
+
+        setStale(true);
     } else {
         qWarning() << "View::copyBufferFrom: skipping ... buffers not initialized ...";
     }
