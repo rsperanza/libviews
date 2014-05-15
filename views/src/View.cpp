@@ -155,6 +155,8 @@ int View::initialize()
 
             qDebug() << "View::initialize: pixmap: " << _bufferWidth << " : " << _bufferHeight << " : " << _pixmapStride;
 
+            _copyMutex.lock();
+
             if (_format == SCREEN_FORMAT_RGBA8888) {
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight);
             } else
@@ -164,6 +166,8 @@ int View::initialize()
             if (_format == SCREEN_FORMAT_YUV420) {
                 memset(_screenPixmapBufferPtr, 0, _pixmapStride*_sourceHeight*1.5);
             }
+
+            _copyMutex.unlock();
 
             _bufferPopulated = false;
         }
