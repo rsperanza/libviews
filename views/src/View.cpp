@@ -533,6 +533,8 @@ void View::setCreateFullWindow(bool create)
 int View::regenerate() {
 	qDebug()  << "View::regenerate: ";
 
+    _copyMutex.lock();
+
 	if (_renderGraphics) {
 		Graphics::lockRendering();
 
@@ -551,8 +553,6 @@ int View::regenerate() {
     _nativeWindow->setZ(_z);
     _nativeWindow->setTransparency(_transparency);
 
-
-    _copyMutex.lock();
 
     if (_screenPixmapBufferPtr) {
         screen_destroy_pixmap(_screenPixmap);
@@ -588,8 +588,6 @@ int View::regenerate() {
         }
     }
 
-    _copyMutex.unlock();
-
     if (_renderGraphics) {
 		_renderGraphics->regenerate(_screenWindow);
 
@@ -603,6 +601,8 @@ int View::regenerate() {
 	setAltered(false);
 
 	setStale(true);
+
+    _copyMutex.unlock();
 
 	return EXIT_SUCCESS;
 }
